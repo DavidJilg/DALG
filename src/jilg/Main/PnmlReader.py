@@ -39,7 +39,6 @@ class PnmlReader:
             model_obj.initial_marking = deepcopy(model_obj.current_marking)
             self.replace_non_valid_variable_names(model_obj)
             self.add_missing_read_variables(model_obj)
-            #self.add_missing_places_in_final_markings(model_obj)
             self.check_model_conformance(model_obj)
             return model_obj, self.warnings
         except MissingEssentialValueError as error:

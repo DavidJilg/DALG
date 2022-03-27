@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pnml>
+   <net id="net1" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+      <name>
+         <text>my dpn</text>
+      </name>
+      <page id="n0">
+         <name>
+            <text/>
+         </name>
+         <place id="n1">
+            <name>
+               <text>wait</text>
+            </name>
+            <toolspecific localNodeID="27b7d71d-0afa-4535-a317-8d3a003d3464" tool="ProM" version="6.4"/>
+            <graphics>
+               <position x="11.25" y="11.25"/>
+               <dimension x="12.5" y="12.5"/>
+            </graphics>
+            <initialMarking>
+               <text>1</text>
+            </initialMarking>
+         </place>
+         <place id="n2">
+            <name>
+               <text>p2</text>
+            </name>
+            <toolspecific localNodeID="409e3a66-1081-42a3-9fc3-7522745aa389" tool="ProM" version="6.4"/>
+            <graphics>
+               <position x="11.25" y="11.25"/>
+               <dimension x="12.5" y="12.5"/>
+            </graphics>
+         </place>
+         <place id="n3">
+            <name>
+               <text>p3</text>
+            </name>
+            <toolspecific localNodeID="7c419a26-992a-4e73-8b1c-72eb73fecebe" tool="ProM" version="6.4"/>
+            <graphics>
+               <position x="11.25" y="11.25"/>
+               <dimension x="12.5" y="12.5"/>
+            </graphics>
+            <finalMarking>
+               <text>1</text>
+            </finalMarking>
+         </place>
+         <place id="n4">
+            <name>
+               <text>p4</text>
+            </name>
+            <toolspecific localNodeID="a726d9df-8e5b-4ab5-9f70-c3d1f1c3ab44" tool="ProM" version="6.4"/>
+            <graphics>
+               <position x="11.25" y="11.25"/>
+               <dimension x="12.5" y="12.5"/>
+            </graphics>
+            <finalMarking>
+               <text>1</text>
+            </finalMarking>
+         </place>
+         <transition id="n5">
+            <name>
+               <text>diagnose</text>
+            </name>
+            <toolspecific activity="diagnose" localNodeID="13c0e0a2-6bbc-42e6-84f5-421356beb6d4"
+                          tool="ProM"
+                          version="6.4"/>
+            <graphics>
+               <position x="17.5" y="15.0"/>
+               <dimension x="25.0" y="20.0"/>
+               <fill color="#FFFFFF"/>
+            </graphics>
+            <writeVariable>patient_status</writeVariable>
+			<readVariable>patient_status</readVariable>
+         </transition>
+         <transition guard="(patient_status==&#34;emergency&#34;)" id="n6">
+            <name>
+               <text>treat</text>
+            </name>
+            <toolspecific activity="treat" localNodeID="7d38fba5-cea7-4ed0-8196-5a6cfd4fcde0" tool="ProM"
+                          version="6.4"/>
+            <graphics>
+               <position x="17.5" y="15.0"/>
+               <dimension x="25.0" y="20.0"/>
+               <fill color="#FFFFFF"/>
+            </graphics>
+         </transition>
+         <transition guard="(patient_status!=&#34;emergency&#34;)" id="n7">
+            <name>
+               <text>discharge</text>
+            </name>
+            <toolspecific activity="discharge" localNodeID="1d66654f-12d5-4302-a185-7add7e3ca0ef"
+                          tool="ProM"
+                          version="6.4"/>
+            <graphics>
+               <position x="17.5" y="15.0"/>
+               <dimension x="25.0" y="20.0"/>
+               <fill color="#FFFFFF"/>
+            </graphics>
+         </transition>
+         <arc id="arc8" source="n5" target="n2">
+            <name>
+               <text>1</text>
+            </name>
+            <toolspecific localNodeID="0ee48017-e19b-46c8-b4ac-07fe89eac6b2" tool="ProM" version="6.4"/>
+            <arctype>
+               <text>normal</text>
+            </arctype>
+         </arc>
+         <arc id="arc9" source="n1" target="n5">
+            <name>
+               <text>1</text>
+            </name>
+            <toolspecific localNodeID="fa8bd045-749e-46ee-a7e1-7377ada650dd" tool="ProM" version="6.4"/>
+            <arctype>
+               <text>normal</text>
+            </arctype>
+         </arc>
+         <arc id="arc10" source="n7" target="n4">
+            <name>
+               <text>1</text>
+            </name>
+            <toolspecific localNodeID="ae537142-a6b0-4b3c-82ff-fb524b42b9aa" tool="ProM" version="6.4"/>
+            <arctype>
+               <text>normal</text>
+            </arctype>
+         </arc>
+         <arc id="arc11" source="n2" target="n6">
+            <name>
+               <text>1</text>
+            </name>
+            <toolspecific localNodeID="7bd9b896-96fe-4b23-bc2c-b18b7d133db7" tool="ProM" version="6.4"/>
+            <arctype>
+               <text>normal</text>
+            </arctype>
+         </arc>
+         <arc id="arc12" source="n6" target="n3">
+            <name>
+               <text>1</text>
+            </name>
+            <toolspecific localNodeID="9351b1db-b30b-48bf-9665-1b466e536059" tool="ProM" version="6.4"/>
+            <arctype>
+               <text>normal</text>
+            </arctype>
+         </arc>
+         <arc id="arc13" source="n2" target="n7">
+            <name>
+               <text>1</text>
+            </name>
+            <toolspecific localNodeID="a93d824e-deef-43b4-84a1-8c9857dbbf70" tool="ProM" version="6.4"/>
+            <arctype>
+               <text>normal</text>
+            </arctype>
+         </arc>
+      </page>
+      <finalmarkings>
+         <marking>
+            <place idref="n1">
+               <text>0</text>
+            </place>
+            <place idref="n2">
+               <text>0</text>
+            </place>
+            <place idref="n3">
+               <text>0</text>
+            </place>
+            <place idref="n4">
+               <text>1</text>
+            </place>
+         </marking>
+		 <marking>
+            <place idref="n1">
+               <text>0</text>
+            </place>
+            <place idref="n2">
+               <text>0</text>
+            </place>
+            <place idref="n3">
+               <text>1</text>
+            </place>
+            <place idref="n4">
+               <text>0</text>
+            </place>
+         </marking>
+      </finalmarkings>
+      <variables>
+         <variable type="java.lang.String">
+            <name>patient_status</name>
+            <position x="0" y="0"/>
+            <dimension height="50" width="50"/>
+         </variable>
+		 <variable maxValue="100.0" minValue="1.0" type="java.lang.Double">
+            <name>variable2</name>
+            <position x="0" y="0"/>
+            <dimension height="50" width="50"/>
+         </variable>
+      </variables>
+   </net>
+</pnml>
