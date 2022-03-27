@@ -19,14 +19,18 @@ class ValueGenerator:
 
     def generate_variable_values(self, transition):
         written_variables = []
+        written_variables_tmp = []
         written_variables_with_out_dependency = []
         for variable in transition.writes_variables:
             if len(variable.semantic_information.dependencies) == 0:
                 written_variables_with_out_dependency.append(variable)
             else:
-                written_variables.append(variable)
+                written_variables_tmp.append((len(variable.semantic_information.dependencies),
+                                              variable))
+        written_variables_tmp.sort(key=lambda x: x[0])
+        for variable in written_variables_tmp:
+            written_variables.append(variable[1])
         written_variables = written_variables_with_out_dependency + written_variables
-
         for variable in written_variables:
             if variable.semantic_information.fixed_variable:
                 if not variable.has_been_written_to:
@@ -86,11 +90,11 @@ class ValueGenerator:
         dependencies = variable.semantic_information.dependencies
         invalid_values = []
         if dependencies:
-            if variable.has_current_value:
-                for dependency in dependencies:
-                    if dependency[0] in ["SELF_REFERENCE", "self", "SELF",
-                                         "self_reference", "Self_Reference"]:
-                        return self.generate_self_reference_value(dependency, variable, transition)
+            # if variable.has_current_value:
+            #     for dependency in dependencies:
+            #         if dependency[0] in ["SELF_REFERENCE", "self", "SELF",
+            #                              "self_reference", "Self_Reference"]:
+            #             return self.generate_self_reference_value(dependency, variable, transition)
             constraints = self.evaluate_dependencies(dependencies, self.model)
             if constraints:
                 interval_constraints, equal_constraints, not_equal_constraints = \
@@ -123,15 +127,20 @@ class ValueGenerator:
                 elif not_equal_constraints:
                     for constraint in not_equal_constraints:
                         invalid_values.append(constraint[1])
+        if variable.has_current_value:
+            for dependency in dependencies:
+                if dependency[0] in ["SELF_REFERENCE", "self", "SELF",
+                                     "self_reference", "Self_Reference"]:
+                    return self.generate_self_reference_value(dependency, variable, transition)
         if variable.semantic_information.used_information == 0:
-            for i in range(self.number_of_tries):
-                value = self.choose_value(variable)
-                if value not in invalid_values:
-                    if variable.type == VariableTypes.DOUBLE:
-                        return round(value, variable.semantic_information.precision)
-                    else:
-                        return value
-            value = self.choose_value(variable)
+            # for i in range(self.number_of_tries):
+            #     value = self.choose_value(variable)
+            #     if value not in invalid_values:
+            #         if variable.type == VariableTypes.DOUBLE:
+            #             return round(value, variable.semantic_information.precision)
+            #         else:
+            #             return value
+            value = self.choose_value(variable, invalid_values)
             if variable.type == VariableTypes.DOUBLE:
                 return round(value, variable.semantic_information.precision)
             else:
@@ -229,7 +238,7 @@ class ValueGenerator:
                 interval_constraints.append(constraint)
         return interval_constraints, equal_constraints, not_equal_constraints
 
-    def evaluate_dependencies(self, dependencies, model):
+    def evaluate_dependencies(self, dependencies, model, print_debug=False):
         constraints = []
         for dependency in dependencies:
             if dependency[0] not in ["SELF_REFERENCE", "self", "SELF",
@@ -239,7 +248,19 @@ class ValueGenerator:
                 for variable in model.variables:
                     if variable.name in fixed_dependency:
                         read_variables.append(variable)
+                if print_debug:
+                    if fixed_dependency == "(MECO != True) && ((TUTH < 1) && ((ULCE == 'with ulceration') || (MIRA == 'increased')))":
+                        print_debug_var = True
+                        variable_values = []
+                        for variable in read_variables:
+                            if variable.has_current_value:
+                                variable_values.append((variable.name, variable.value))
+                        print(fixed_dependency, variable_values)
+                    else:
+                        print_debug_var = False
                 if self.evaluate_logical_expression(fixed_dependency, read_variables):
+                    if print_debug and print_debug_var:
+                        print("true")
                     constraints.append(dependency[1])
         return constraints
 
@@ -391,9 +412,21 @@ class ValueGenerator:
         else:
             return intervals + inverse_intervals
 
-    def choose_value(self, variable):
-        possible_values = variable.semantic_information.values[0]
-        weights = variable.semantic_information.values[1]
+    def choose_value(self, variable, invalid_values=None):
+        if invalid_values is None:
+            invalid_values = []
+        possible_values = []
+        weights = []
+        if variable.semantic_information.values[1]:
+            for value, weight in zip(variable.semantic_information.values[0],
+                                     variable.semantic_information.values[1]):
+                if value not in invalid_values:
+                    possible_values.append(value)
+                    weights.append(weight)
+        else:
+            for value in variable.semantic_information.values[0]:
+                if value not in invalid_values:
+                    possible_values.append(value)
         if possible_values:
             if weights:
                 value = self.rng.choice(a=possible_values,

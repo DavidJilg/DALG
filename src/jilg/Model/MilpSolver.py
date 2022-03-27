@@ -1,4 +1,5 @@
 import datetime
+import numpy
 import re
 from copy import deepcopy
 from enum import Enum
@@ -54,11 +55,6 @@ class MilpSolver:
             if not variable.has_current_value:
                 if variable.name in guard_string:
                     guard_string = self.deal_with_missing_values(guard_string, variable.name)
-        # print(guard_string)
-        # for var in variables:
-        #     print(var.name, var.value)
-        # print(self.evaluate_guard_string(guard_string))
-        # print("-----------------------------------------")
         return self.evaluate_guard_string(guard_string)
 
     def deal_with_missing_values(self, guard_string, variable_name):
@@ -131,6 +127,7 @@ class MilpSolver:
         return left_index, right_index
 
     def remove_spaces(self, string):
+        string = string.replace("'", '"')
         lst = string.split('"')
         for i, item in enumerate(lst):
             if not i % 2:
@@ -311,7 +308,8 @@ class MilpSolver:
     def evaluate_brackets_with_last_single_operator(self, parts, brackets, operator):
         part0 = self.evaluate_guard_string(parts[0], brackets)
         part1 = self.evaluate_guard_string(parts[1], brackets)
-        if type(part0) not in [int, float] or type(part1) not in [int, float]:
+        number_classes = [int, float, numpy.float32, numpy.int32, numpy.float64, numpy.float32]
+        if type(part0) not in number_classes or type(part1) not in number_classes:
             return False
         elif operator == Operators.GREATER:
             return part0 > part1
@@ -508,8 +506,18 @@ class MilpSolver:
 
 if __name__ == "__main__":
     lc = MilpSolver()
-    variables = [Variable("varDate", "java.util.Date", 0, 0, 0, 0, None, None, None, False)]
-    variables[0].value = 1088874282.7827098
+    variables = [Variable("TUTH", "java.lang.Double", 0, 0, 0, 0, None, None, None, False),
+                 Variable("ULCE", "java.lang.String", 0, 0, 0, 0, None, None, None, False),
+                 Variable("MECO", "java.lang.Boolean", 0, 0, 0, 0, None, None, None, False)]
+    variables[0].value = 1.43
     variables[0].has_current_value = True
     variables[0].has_been_written_to = True
-    print(lc.compile_and_evaluate_string('(varDate > "2003-01-01T00:00:00")', variables))
+
+    variables[1].value = "without ulceration"
+    variables[1].has_current_value = True
+    variables[1].has_been_written_to = True
+
+    variables[2].has_current_value = False
+    variables[2].has_been_written_to = False
+    print(lc.compile_and_evaluate_string("(MECO   != True) && ((TUTH < 2) && ((TUTH > 1.01)"
+                                         " && (ULCE == 'without ulceration')))", variables))

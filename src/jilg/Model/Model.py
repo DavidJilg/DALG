@@ -90,6 +90,12 @@ class Model:
             if transition.is_enabled(with_data):
                 enabled_transitions.append(transition)
 
+        #print("-------------------------------------------")
+        #transition_names = []
+        #for transition in enabled_transitions:
+        #    transition_names.append(transition.name)
+        #print(transition_names)
+
         if with_probabilities and enabled_transitions:
             probabilities = self.calculate_probabilities(enabled_transitions)
             return enabled_transitions, probabilities

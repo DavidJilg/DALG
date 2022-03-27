@@ -6,7 +6,8 @@ import traceback
 import webbrowser as wb
 
 from dateutil.parser import parse
-from PySide6.QtCore import Signal, QRunnable, Slot, QThreadPool, QObject, QTime, QDateTime, QFile
+from PySide6.QtCore import Signal, QRunnable, Slot, QThreadPool, QObject, QTime, QDateTime, QFile, \
+    QLocale
 from PySide6.QtGui import QKeySequence, Qt, QIcon
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QLabel, \
@@ -226,6 +227,7 @@ class MainGui:
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.window = MainWindow()
+        self.window.setLocale(QLocale(QLocale.English))
         self.variable_inputs = []
         self.configure_menu_actions()
         self.configure_scroll_areas()
@@ -2256,6 +2258,8 @@ class MainGui:
 
     def update_var_input_from_config(self, var_config: SemanticInformation):
         var_input = self.get_var_input_by_name(var_config.variable_name)
+        #print(var_config.variable_name)
+
         variable = var_input.variable
         var_type = variable.type
 
