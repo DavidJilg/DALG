@@ -1,0 +1,333 @@
+<?xml version="1.0" ?>
+<!-- This file has been generated with DALG: The Data Aware Event Log Generator -->
+<!-- https://github.com/DavidJilg/DALG -->
+<log creator="DALG" xes.version="1.0" xmlns="http://www.xes-standard.org/">
+  <extension name="Concept" prefix="concept" uri="http://www.xes-standard.org/concept.xesext"/>
+  <extension name="Time" prefix="time" uri="http://www.xes-standard.org/time.xesext"/>
+  <extension name="General metadata" prefix="meta_general" uri="http://www.xes-standard.org/meta_general.xesext"/>
+  <extension name="Metadata Concept" prefix="meta_concept" uri="http://www.xes-standard.org/meta_concept.xesext"/>
+  <int key="meta_general:traces_total" value="10"/>
+  <int key="meta_general:events_total" value="30"/>
+  <float key="meta_general:events_average" value="3.0"/>
+  <int key="meta_general:events_min" value="3"/>
+  <int key="meta_general:events_max" value="3"/>
+  <float key="meta_general:events_standard_deviation" value="0.0"/>
+  <int key="meta_concept:different_names_total" value="3"/>
+  <float key="meta_concept:different_names_average" value="3.0"/>
+  <float key="meta_concept:different_names_standard_deviation" value="0.0"/>
+  <int key="meta_concept:different_names_min" value="3"/>
+  <int key="meta_concept:different_names_max" value="3"/>
+  <int key="meta_concept:named_events_total" value="30"/>
+  <float key="meta_concept:named_events_average" value="3.0"/>
+  <float key="meta_concept:named_events_standard_deviation" value="0.0"/>
+  <int key="meta_concept:named_events_min" value="3"/>
+  <int key="meta_concept:named_events_max" value="3"/>
+  <global scope="trace">
+    <string key="concept:name" value="DEFAULT"/>
+  </global>
+  <global scope="event">
+    <string key="concept:name" value="DEFAULT"/>
+    <date key="time:timestamp" value="1970-01-01T01:00:00.000+01:00"/>
+  </global>
+  <string key="concept:name" value="event_log"/>
+  <trace>
+    <string key="concept:name" value="trace1"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-01-02T23:59:58.363406+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="20"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.06"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-01-06T00:00:14.130822+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="12"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.55"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-01-07T00:16:09.372412+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="12"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.55"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace2"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-01-09T00:16:09.232485+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="31"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="1.41"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-01-12T00:17:18.373024+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="85"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="22.97"/>
+      <date key="varDate" value="2001-06-22T19:00:39"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-01-13T00:21:24.658820+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="85"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="22.97"/>
+      <date key="varDate" value="2001-06-22T19:00:39"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace3"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-01-15T00:21:23.115167+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="33"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.77"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-01-18T00:30:01.206245+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="6"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.04"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-01-19T00:27:56.482500+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="6"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.04"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace4"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-01-21T00:27:55.002452+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="40"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.18"/>
+      <date key="varDate" value="2000-01-01T00:00:01"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-01-24T00:29:13.678922+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="39"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.91"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-01-25T00:31:48.650352+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="39"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.91"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace5"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-01-27T00:31:48.613544+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="28"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="1.08"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-01-30T00:39:19.956023+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="31"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="1.25"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-01-31T00:48:17.964129+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="31"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="1.25"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace6"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-02-02T00:48:18.192038+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="45"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.93"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-02-05T00:54:56.320398+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="30"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.12"/>
+      <date key="varDate" value="2000-01-01T00:00:02"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-02-06T00:58:44.554606+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="30"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.12"/>
+      <date key="varDate" value="2000-01-01T00:00:02"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace7"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-02-08T00:58:45.794523+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="72"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="69.99"/>
+      <date key="varDate" value="2002-09-15T07:37:26"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-02-11T01:00:56.432218+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="74"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="76.37"/>
+      <date key="varDate" value="2001-10-17T11:40:22"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-02-12T01:05:15.624239+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="74"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="76.37"/>
+      <date key="varDate" value="2001-10-17T11:40:22"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace8"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-02-14T01:05:15.457312+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="52"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="21.66"/>
+      <date key="varDate" value="2001-06-29T20:47:03"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-02-17T01:05:17.449562+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="20"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.51"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-02-18T01:10:34.278660+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="20"/>
+      <string key="varString" value="value1"/>
+      <float key="varDouble" value="0.51"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace9"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-02-20T01:10:33.206217+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="42"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="1.02"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-02-23T01:09:03.100891+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="17"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.94"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-02-24T01:21:17.398625+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="17"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.94"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+  <trace>
+    <string key="concept:name" value="trace10"/>
+    <event>
+      <string key="concept:name" value="A"/>
+      <date key="time:timestamp" value="2000-02-26T01:21:18.342222+00:00"/>
+      <boolean key="varBoolean" value="False"/>
+      <int key="varLong" value="56"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="13.94"/>
+      <date key="varDate" value="2001-06-09T14:28:26"/>
+    </event>
+    <event>
+      <string key="concept:name" value="B"/>
+      <date key="time:timestamp" value="2000-02-29T01:25:38.515028+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="11"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.18"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+    <event>
+      <string key="concept:name" value="C"/>
+      <date key="time:timestamp" value="2000-03-01T01:31:05.191195+00:00"/>
+      <boolean key="varBoolean" value="True"/>
+      <int key="varLong" value="11"/>
+      <string key="varString" value="value2"/>
+      <float key="varDouble" value="0.18"/>
+      <date key="varDate" value="2000-01-01T00:00:00"/>
+    </event>
+  </trace>
+</log>
