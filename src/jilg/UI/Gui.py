@@ -2085,7 +2085,7 @@ class MainGui:
             for sem_info in sem_infos:
                 try:
                     var_name = sem_info["variable_name"]
-                    if var_name == variable.name:
+                    if var_name == variable.original_name:
                         var_config_found = True
                 except KeyError:
                     return False, model_path
