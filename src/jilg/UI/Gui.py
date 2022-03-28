@@ -340,7 +340,7 @@ class MainGui:
         for label in labels:
             label.move(label.x(), label.y() + 2)
         ui.output_dir_label_31.move(ui.output_dir_label_31.x(), ui.output_dir_label_31.y() - 1)
-        ui.general_config.setFixedHeight(145)
+        ui.general_config.setFixedHeight(180)
         self.app.setStyleSheet("QGroupBox{font-size: 11pt;}"
                                "QLabel{font-size: 11pt;}"
                                "QComboBox{font-size: 10pt;}")
