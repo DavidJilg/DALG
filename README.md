@@ -1,5 +1,5 @@
 # DALG
-DALG: The Data Aware Event Log Generator is a tool that can generate event logs that conform to the control-flow and the data perspective of a Data Petri net. It was developed by David Jilg as part of his master thesis "Generating Synthetic Procedural Multi-Perspective Electronic Healthcare Treatment Cases" which is provided as part of the documentation.
+DALG: The Data Aware Event Log Generator is a tool that can generate event logs that conform to the control-flow and the data perspective of a Data Petri net. It was developed by David Jilg as part of his master thesis "Generating Synthetic Procedural Multi-Perspective Electronic Healthcare Treatment Cases" which will be provided as part of the documentation in a future update.
 
 # License
 DALG is provided under the GNU General Public License 3 which is included in the documentation. Alternatively it can be accessed through the following url: https://www.gnu.org/licenses/gpl-3.0.html
