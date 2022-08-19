@@ -1,8 +1,10 @@
 import datetime
 import itertools
+import random
 import threading
 import traceback
 from copy import deepcopy, copy
+from enum import Enum
 from threading import Thread
 
 import numpy as np
@@ -19,6 +21,16 @@ from src.jilg.Simulation.Trace import Trace
 from scipy.stats import truncnorm
 
 from src.jilg.Simulation.ValueGenerator import ValueGenerator
+
+
+class Weekday(Enum):
+    Mon = 0
+    Tue = 1
+    Wed = 2
+    Thu = 3
+    Fri = 4
+    Sat = 5
+    Sun = 6
 
 
 class DiscreteVariableValue:
@@ -120,7 +132,7 @@ class Simulation:
                 sim_thread.start()
             elif self.config.sim_strategy == "random_exploration":
                 self.config.max_trace_duplicates = 0
-                #self.config.duplicates_with_data_perspective = False
+                # self.config.duplicates_with_data_perspective = False
                 self.config.model_has_no_increasing_loop = True
                 if self.config.perform_trace_estimation:
                     self.thread_status = [0, 0, False, -1, False]
@@ -429,7 +441,7 @@ class Simulation:
                                 for partial_trace in partial_traces:
                                     if self.count_duplicates(
                                             partial_trace) <= self.config.max_trace_duplicates:
-                                        if len(self.current_event_log.traces) <\
+                                        if len(self.current_event_log.traces) < \
                                                 self.config.number_of_traces:
                                             self.current_event_log.traces.append(partial_trace)
                             break
@@ -845,6 +857,10 @@ class Simulation:
             return trace_name
 
     def forward_time(self, fired_transition, previous_transition):
+        if fired_transition.config.use_general_config:
+            valid_time_intervals = self.config.time_intervals
+        else:
+            valid_time_intervals = fired_transition.config.time_intervals
         delay = 0
         if previous_transition is not None:
             if not previous_transition.config.no_time_forward:
@@ -863,8 +879,117 @@ class Simulation:
                                                       fired_transition.config.time_delay_min,
                                                       fired_transition.config.time_delay_max)
                 delay += generator.rvs()
-        timedelta = datetime.timedelta(seconds=delay)
+        if self.check_timestamp_validity(valid_time_intervals, delay):
+            timedelta = datetime.timedelta(seconds=delay)
+        else:
+            if fired_transition.config.use_general_config:
+                add_time_interval_variance = self.config.add_time_interval_variance
+                max_time_interval_variance = self.config.max_time_interval_variance
+            else:
+                add_time_interval_variance = fired_transition.config.add_time_interval_variance
+                max_time_interval_variance = fired_transition.config.max_time_interval_variance
+            timedelta = self.get_next_valid_timestamp(delay, valid_time_intervals,
+                                                      add_time_interval_variance,
+                                                      max_time_interval_variance
+                                                      )
         return timedelta
+
+    def check_timestamp_validity(self, valid_time_intervals, delay):
+        if not valid_time_intervals:
+            return True
+        target_timestamp = copy(self.current_time) + datetime.timedelta(seconds=delay)
+        for time_interval in valid_time_intervals:
+            if self.in_interval(target_timestamp, time_interval):
+                return True
+        return False
+
+    def in_interval(self, time, time_interval):
+        weekdays, interval = time_interval.replace(" ", "").split("|")
+        if "," in weekdays:
+            weekdays = weekdays.split(",")
+        else:
+            weekdays = [weekdays]
+        valid_day = False
+        current_weekday = time.weekday()
+        for weekday in weekdays:
+            if current_weekday == Weekday[weekday].value:
+                valid_day = True
+                break
+        if not valid_day:
+            return False
+
+        interval_start, interval_stop = self.get_interval_timestamps(time, interval.split("-")[0],
+                                                                     interval.split("-")[1])
+
+        if interval_start <= time <= interval_stop:
+            return True
+        else:
+            return False
+
+    def get_interval_timestamps(self, base_time, start_string, stop_string):
+        interval_start_time = datetime.datetime.strptime(start_string, "%H:%M:%S")
+        interval_stop_time = datetime.datetime.strptime(stop_string, "%H:%M:%S")
+        interval_start = copy(base_time)
+        interval_stop = copy(base_time)
+
+        interval_start = interval_start.replace(hour=interval_start_time.hour,
+                                                minute=interval_start_time.minute,
+                                                second=interval_start_time.second)
+        interval_stop = interval_stop.replace(hour=interval_stop_time.hour,
+                                              minute=interval_stop_time.minute,
+                                              second=interval_stop_time.second)
+        return interval_start, interval_stop
+
+    def get_next_valid_timestamp(self, delay1, valid_time_intervals, add_variance, max_variance):
+        processed_intervals = []
+        for valid_interval in valid_time_intervals:
+            weekdays_string, interval_string = valid_interval.replace(" ", "").split("|")
+            if "," in weekdays_string:
+                weekdays_string = weekdays_string.split(",")
+            else:
+                weekdays_string = [weekdays_string]
+            weekdays = []
+            for weekday in weekdays_string:
+                weekdays.append(Weekday[weekday].value)
+            weekdays.sort()
+            start, stop = interval_string.split("-")
+            processed_intervals.append((weekdays, (start, stop)))
+
+        target_timestamp = copy(self.current_time) + datetime.timedelta(seconds=delay1)
+
+        distance_to_intervals = []  # Tuple (distance, interval_start: Datetime obj)
+        for interval in processed_intervals:
+            distance_to_intervals.append(self.get_distance_to_interval(target_timestamp, interval))
+        distance_to_intervals.sort(key=lambda x: x[0])
+
+        delay2, interval_start, interval_stop = distance_to_intervals[0]
+        if add_variance and max_variance > 0:
+            max_variance_sec = max_variance * 60
+            interval_length = (interval_stop - interval_start).total_seconds()
+            if interval_length > max_variance_sec:
+                delay2 += random.randint(0, max_variance_sec)
+            else:
+                delay2 += random.randint(0, max_variance_sec)
+
+        return datetime.timedelta(seconds=delay1 + delay2)
+
+    def get_distance_to_interval(self, target_timestamp, interval):
+        interval_start, interval_stop = self.get_interval_timestamps(target_timestamp,
+                                                                     interval[1][0],
+                                                                     interval[1][1])
+
+        if target_timestamp.weekday() in interval[0] and interval_start >= target_timestamp:
+            distance = (interval_start - target_timestamp).total_seconds()
+        else:
+            if interval_start <= target_timestamp:
+                interval_start += datetime.timedelta(days=1)
+                interval_stop += datetime.timedelta(days=1)
+            while interval_start.weekday() not in interval[0]:
+                interval_start += datetime.timedelta(days=1)
+                interval_stop += datetime.timedelta(days=1)
+            distance = (interval_start - target_timestamp).total_seconds()
+
+        return distance, interval_start, interval_stop
 
     def get_previous_transition_lead_time(self, previous_transition):
         if previous_transition.config.use_general_config:

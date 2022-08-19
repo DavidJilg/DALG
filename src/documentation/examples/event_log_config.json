@@ -1,6 +1,6 @@
 {
-   "model_file_path": "E:/Google Drive/MASTER/Semester 4/Implementation/Mather-Thesis-Implementation/src/documentation/examples/all_variable_types.pnml",
-   "output_directory": "E:/Google Drive/MASTER/Semester 4/Implementation/Mather-Thesis-Implementation/src/documentation/examples/",
+   "model_file_path": "E:/Google Drive/DALG/src/documentation/examples/all_variable_types.pnml",
+   "output_directory": "C:\\Users\\david\\Documents\\/",
    "event_log_name": "event_log",
    "number_of_event_logs": 1,
    "logs_in_one_file": false,
@@ -24,6 +24,11 @@
       "timestamp_lead_sd": 120,
       "timestamp_lead_min": 0,
       "timestamp_lead_max": 86401,
+      "time_intervals": [
+         "Mon,Tue,Wed,Thu,Fri,Sat,Sun|07:00:00-18:00:00"
+      ],
+      "add_time_interval_variance": false,
+      "max_time_interval_variance": 0,
       "random_seed": 1701,
       "transition_configs": [
          {
@@ -47,7 +52,12 @@
                "varDouble",
                "varDate"
             ],
-            "no_time_forward": false
+            "no_time_forward": false,
+            "time_intervals": [
+               "Mon,Tue,Wed,Thu,Fri|07:00:00-18:00:00"
+            ],
+            "add_time_interval_variance": false,
+            "max_time_interval_variance": 0
          },
          {
             "transition_id": "B",
@@ -70,7 +80,12 @@
                "varDouble",
                "varDate"
             ],
-            "no_time_forward": false
+            "no_time_forward": false,
+            "time_intervals": [
+               "Mon,Tue,Wed,Thu,Fri|07:00:00-18:00:00"
+            ],
+            "add_time_interval_variance": false,
+            "max_time_interval_variance": 0
          },
          {
             "transition_id": "C",
@@ -93,7 +108,12 @@
                "varDouble",
                "varDate"
             ],
-            "no_time_forward": false
+            "no_time_forward": false,
+            "time_intervals": [
+               "Mon,Tue,Wed,Thu,Fri|07:00:00-18:00:00"
+            ],
+            "add_time_interval_variance": false,
+            "max_time_interval_variance": 0
          }
       ],
       "trace_names": [

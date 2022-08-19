@@ -4,6 +4,8 @@ from xml.dom import minidom
 
 import numpy as np
 
+from src.jilg.Other import Global
+
 
 class XesWriter:
     def write_event_logs_to_xes_file(self, output_dir, event_logs, write_to_single_file,
@@ -62,8 +64,8 @@ class XesWriter:
         pretty_xml = reparsed.toprettyxml(indent="  ").split("?>")[1][1:]
         xml_declaration = '<?xml version="1.0" ?>\n'
         comments = "<!-- This file has been generated with DALG:" \
-                   " The Data Aware Event Log Generator -->\n" \
-                   "<!-- https://github.com/DavidJilg/DALG -->\n"
+                   " The Data Aware Event Log Generator v{version} -->\n" \
+                   "<!-- https://github.com/DavidJilg/DALG -->\n".format(version=Global.DALG_VERSION)
         return xml_declaration + comments + pretty_xml
 
     def add_traces(self, root, event_log, trace_name, include_invisible_transitions):

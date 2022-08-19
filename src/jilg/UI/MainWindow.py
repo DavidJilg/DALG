@@ -3,24 +3,20 @@
 ################################################################################
 ## Form generated from reading UI file 'MainWindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.2.2
+## Created by: Qt User Interface Compiler version 6.3.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
-    QCursor, QFont, QFontDatabase, QGradient,
-    QIcon, QImage, QKeySequence, QLinearGradient,
-    QPainter, QPalette, QPixmap, QRadialGradient,
-    QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
-    QFrame, QGroupBox, QLabel, QLineEdit,
-    QMainWindow, QMenu, QMenuBar, QProgressBar,
-    QPushButton, QScrollArea, QSizePolicy, QSpinBox,
-    QTimeEdit, QToolButton, QVBoxLayout, QWidget)
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject, QRect,
+                            QSize, QTime, Qt)
+from PySide6.QtGui import (QAction, QFont)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateTimeEdit,
+                               QFrame, QGroupBox, QLabel, QLineEdit,
+                               QMenu, QMenuBar, QPlainTextEdit,
+                               QProgressBar, QPushButton, QScrollArea, QSizePolicy,
+                               QSpinBox, QTimeEdit, QToolButton, QVBoxLayout,
+                               QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -67,7 +63,7 @@ class Ui_MainWindow(object):
         self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 431, 559))
         self.general_config_2 = QGroupBox(self.scrollAreaWidgetContents)
         self.general_config_2.setObjectName(u"general_config_2")
-        self.general_config_2.setGeometry(QRect(10, 10, 411, 391))
+        self.general_config_2.setGeometry(QRect(10, 10, 411, 651))
         font2 = QFont()
         font2.setPointSize(12)
         self.general_config_2.setFont(font2)
@@ -173,7 +169,7 @@ class Ui_MainWindow(object):
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_4 = QFrame(self.general_config_2)
         self.line_4.setObjectName(u"line_4")
-        self.line_4.setGeometry(QRect(-1, 10, 3, 375))
+        self.line_4.setGeometry(QRect(-1, 10, 3, 641))
         self.line_4.setFrameShadow(QFrame.Plain)
         self.line_4.setFrameShape(QFrame.VLine)
         self.line_6 = QFrame(self.general_config_2)
@@ -183,12 +179,12 @@ class Ui_MainWindow(object):
         self.line_6.setFrameShape(QFrame.HLine)
         self.line_2 = QFrame(self.general_config_2)
         self.line_2.setObjectName(u"line_2")
-        self.line_2.setGeometry(QRect(-1, 370, 412, 31))
+        self.line_2.setGeometry(QRect(-1, 635, 412, 31))
         self.line_2.setFrameShadow(QFrame.Plain)
         self.line_2.setFrameShape(QFrame.HLine)
         self.line_5 = QFrame(self.general_config_2)
         self.line_5.setObjectName(u"line_5")
-        self.line_5.setGeometry(QRect(409, 10, 3, 375))
+        self.line_5.setGeometry(QRect(409, 10, 3, 641))
         self.line_5.setFrameShadow(QFrame.Plain)
         self.line_5.setFrameShape(QFrame.VLine)
         self.time_delay_maximum_3 = QWidget(self.general_config_2)
@@ -297,6 +293,31 @@ class Ui_MainWindow(object):
         self.timestamp_millieseconds_input.setObjectName(u"timestamp_millieseconds_input")
         self.timestamp_millieseconds_input.setGeometry(QRect(310, 0, 31, 23))
         self.timestamp_millieseconds_input.setChecked(False)
+        self.variance_input = QCheckBox(self.general_config_2)
+        self.variance_input.setObjectName(u"variance_input")
+        self.variance_input.setGeometry(QRect(240, 570, 161, 23))
+        self.time_intervals_input = QPlainTextEdit(self.general_config_2)
+        self.time_intervals_input.setObjectName(u"time_intervals_input")
+        self.time_intervals_input.setGeometry(QRect(10, 410, 391, 141))
+        self.initial_value_label_7 = QLabel(self.general_config_2)
+        self.initial_value_label_7.setObjectName(u"initial_value_label_7")
+        self.initial_value_label_7.setGeometry(QRect(10, 570, 221, 21))
+        self.initial_value_label_7.setFont(font2)
+        self.initial_value_label_7.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.initial_value_label_8 = QLabel(self.general_config_2)
+        self.initial_value_label_8.setObjectName(u"initial_value_label_8")
+        self.initial_value_label_8.setGeometry(QRect(10, 600, 221, 21))
+        self.initial_value_label_8.setFont(font2)
+        self.initial_value_label_8.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.max_variance_input = QSpinBox(self.general_config_2)
+        self.max_variance_input.setObjectName(u"max_variance_input")
+        self.max_variance_input.setGeometry(QRect(240, 600, 161, 25))
+        self.max_variance_input.setMaximum(10000)
+        self.output_dir_label_39 = QLabel(self.general_config_2)
+        self.output_dir_label_39.setObjectName(u"output_dir_label_39")
+        self.output_dir_label_39.setGeometry(QRect(10, 383, 381, 21))
+        self.output_dir_label_39.setFont(font2)
+        self.output_dir_label_39.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.transition_config.setWidget(self.scrollAreaWidgetContents)
         self.label_2 = QLabel(self.centralwidget)
         self.label_2.setObjectName(u"label_2")
@@ -805,18 +826,24 @@ class Ui_MainWindow(object):
         self.merge_intervals_input.setGeometry(QRect(220, 0, 31, 23))
         self.merge_intervals_input.setChecked(True)
         self.sim_config.setWidget(self.scrollAreaWidgetContents_7)
+        self.DALG_VERSION = QLabel(self.centralwidget)
+        self.DALG_VERSION.setObjectName(u"DALG_VERSION")
+        self.DALG_VERSION.setGeometry(QRect(1290, 0, 51, 21))
+        font4 = QFont()
+        font4.setPointSize(9)
+        self.DALG_VERSION.setFont(font4)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 1360, 25))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
-        font4 = QFont()
-        font4.setPointSize(11)
-        font4.setBold(False)
-        font4.setUnderline(False)
-        font4.setStrikeOut(False)
-        self.menuFile.setFont(font4)
+        font5 = QFont()
+        font5.setPointSize(11)
+        font5.setBold(False)
+        font5.setUnderline(False)
+        font5.setStrikeOut(False)
+        self.menuFile.setFont(font5)
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         MainWindow.setMenuBar(self.menubar)
@@ -902,6 +929,28 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.output_dir_label_33.setText(QCoreApplication.translate("MainWindow", u"Include Microseconds in Timestamps:", None))
         self.timestamp_millieseconds_input.setText("")
+#if QT_CONFIG(tooltip)
+        self.variance_input.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>This input allows you to add variance to the timestamp of an activity if the activity is at the beginning of a time interval. If this setting is not usesd all timestamps that are originally outside of the time intervals will be at the beginning of the next valid interval. </p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.variance_input.setText("")
+#if QT_CONFIG(tooltip)
+        self.time_intervals_input.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>This input allows you to restrict when the activity can be performed. Therefore, a list of time intervals can be provided. If not Intervals are provided, no restrictions aply. The following syntax has to be used:</p><p align=\"center\">Mon,Tue,Wed,Thu,Fri,Sat,Sun | 07:00:00-12:00:00;</p><p align=\"center\">Mon,Tue,Wed,Thu,Fri | 14:00:00-18:00:00;</p><p align=\"center\">.....</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.initial_value_label_7.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>This input allows you to add variance to the timestamp of an activity if the activity is at the beginning of a time interval. If this setting is not usesd all timestamps that are originally outside of the time intervals will be at the beginning of the next valid interval. </p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.initial_value_label_7.setText(QCoreApplication.translate("MainWindow", u"Add Time Interval Variance:", None))
+#if QT_CONFIG(tooltip)
+        self.initial_value_label_8.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>This input allows you set the maximum variance.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.initial_value_label_8.setText(QCoreApplication.translate("MainWindow", u"Maximum Variance (Minutes):", None))
+#if QT_CONFIG(tooltip)
+        self.max_variance_input.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>This input allows you set the maximum variance.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.output_dir_label_39.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>This input allows you to restrict when the activity can be performed. Therefore, a list of time intervals can be provided. If not Intervals are provided, no restrictions aply. The following syntax has to be used:</p><p align=\"center\">Mon,Tue,Wed,Thu,Fri,Sat,Sun | 07:00:00-12:00:00;</p><p align=\"center\">Mon,Tue,Wed,Thu,Fri | 14:00:00-18:00:00;</p><p align=\"center\">.....</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.output_dir_label_39.setText(QCoreApplication.translate("MainWindow", u"Time Intervals:", None))
 #if QT_CONFIG(tooltip)
         self.label_2.setToolTip("")
 #endif // QT_CONFIG(tooltip)
@@ -1094,6 +1143,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.output_dir_label_35.setText(QCoreApplication.translate("MainWindow", u"Merge Intervals if Possible:", None))
         self.merge_intervals_input.setText("")
+        self.DALG_VERSION.setText("")
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
     # retranslateUi

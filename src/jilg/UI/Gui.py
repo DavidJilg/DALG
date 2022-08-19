@@ -1,3 +1,4 @@
+import datetime
 import json
 import sys
 import threading
@@ -24,6 +25,7 @@ from src.jilg.Other.Global import VariableTypes
 from src.jilg.Model.Variable import Variable
 from src.jilg.Other import Global
 from src.jilg.Other.Global import Status
+from src.jilg.Simulation.Simulation import Weekday
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 from src.jilg.Simulation.ValueGenerator import ValueGenerator
 from src.jilg.UI.MainWindow import Ui_MainWindow
@@ -188,7 +190,8 @@ class TransitionInput:
     def __init__(self, transition, activity_name_input, weight_input, invisible_input,
                  mean_delay_input, delay_sd_input, delay_min_input, delay_max_input,
                  lead_mean_input, lead_min_input, lead_max_input, lead_sd_input,
-                 general_config_input, widget, scroll_area, included_vars, no_time_forwarding_input):
+                 general_config_input, widget, scroll_area, included_vars, no_time_forwarding_input,
+                 variance_input, max_variance_input, time_intervals_input):
         self.transition = transition
         self.activity_name_input = activity_name_input
         self.weight_input = weight_input
@@ -206,6 +209,9 @@ class TransitionInput:
         self.scroll_area = scroll_area
         self.included_vars = included_vars
         self.no_time_forwarding_input = no_time_forwarding_input
+        self.variance_input = variance_input
+        self.max_variance_input = max_variance_input
+        self.time_intervals_input = time_intervals_input
 
 
 class MainGui:
@@ -249,25 +255,42 @@ class MainGui:
         self.window.setWindowTitle("DALG: The Data Aware Event Log Generator")
         self.window.setWindowIcon(QIcon(os.getcwd() + "/src/resources/img/icon.png"))
         self.window.ui.loaded_model_label.setWordWrap(True)
-
+        self.window.ui.DALG_VERSION.setText("     v" + str(Global.DALG_VERSION))
+        self.window.ui.DALG_VERSION.setStyleSheet("font-size: 9pt")
         self.window.ui.duplicates_with_data_input.stateChanged. \
             connect(lambda: self.change_duplicates_with_data())
 
         self.window.ui.trace_estimation_input.stateChanged. \
             connect(lambda: self.change_perform_trace_estimation())
 
+        self.window.ui.variance_input.stateChanged.connect(lambda: self.change_variance_input())
+
         self.change_perform_trace_estimation()
         self.change_duplicates_with_data()
+        self.change_variance_input()
+
+        self.fix_gui_element_values()
 
         if os.name != 'nt':
             self.set_up_for_linux()
         self.check_user_preferences()
         sys.exit(self.app.exec())
 
+    def fix_gui_element_values(self):
+        self.window.ui.time_delay_minimum_time_input.setTime(QTime(00, 00, 00))
+        self.window.ui.time_lead_minimum_time_input.setTime(QTime(00, 00, 00))
+
     def check_user_preferences(self):
         preference_path = os.getcwd() + "/src/resources/preferences.json"
+        preference_path_production = os.getcwd() + "/resources/preferences.json"
         if os.path.isfile(preference_path):
             with open(preference_path, "r") as preference_file:
+                preferences = json.load(preference_file)
+            if "show_welcome_screen" in preferences.keys():
+                if preferences["show_welcome_screen"]:
+                    self.show_welcome_screen()
+        elif os.path.isfile(preference_path_production):
+            with open(preference_path_production, "r") as preference_file:
                 preferences = json.load(preference_file)
             if "show_welcome_screen" in preferences.keys():
                 if preferences["show_welcome_screen"]:
@@ -631,7 +654,7 @@ class MainGui:
                 info_text += "\nExceptions could occur if the simulation is started with" \
                              " this configuration. These exceptions can also cause problems" \
                              " that can" \
-                             " not be fixes without restarting the program and therefore" \
+                             " not be fixed without restarting the program and, therefore," \
                              " could also cause problems for future simulations!" \
                              " \n\nDo you want to continue anyway?"
                 ret = QMessageBox.question(self.window, 'Configuration invalid!',
@@ -745,6 +768,12 @@ class MainGui:
             warnings.append("(General Transition Lead Time Max.)"
                             " - (General Transition Lead Time Min.)"
                             " must be greater then 0!")
+        try:
+            self.parse_time_intervals(self.window.ui.time_intervals_input)
+            self.check_time_intervals(self.window.ui.time_intervals_input.toPlainText())
+        except Exception:
+            warnings.append("Invalid time intervals in general transition configuration!")
+            valid = False
 
         for var_input in self.variable_inputs:
             var_warnings = self.check_variable_config_input(var_input)
@@ -758,6 +787,34 @@ class MainGui:
                 valid = False
 
         return valid, warnings
+
+    def check_time_intervals(self, text):
+        if text != "":
+            text = text.replace(" ", "").replace("\n", "")
+            if "|" not in text:
+                raise Exception
+            if "-" not in text:
+                raise Exception
+            if ";" in text:
+                intervals = text.split(";")
+                for interval in intervals:
+                    self.check_time_interval(interval)
+            else:
+                self.check_time_interval(text)
+
+    def check_time_interval(self, time_interval):
+        weekdays, interval = time_interval.split("|")
+        if "," in weekdays:
+            weekdays = weekdays.split(",")
+        start_string, stop_string = interval.split("-")
+        interval_start_time = datetime.datetime.strptime(start_string, "%H:%M:%S")
+        interval_stop_time = datetime.datetime.strptime(stop_string, "%H:%M:%S")
+        if interval_start_time > interval_stop_time:
+            raise Exception
+        if not weekdays:
+            raise Exception
+        for weekday in weekdays:
+            Weekday[weekday].value
 
     def check_variable_config_input(self, var_input: VariableInput):
         warnings = []
@@ -983,6 +1040,11 @@ class MainGui:
             if trans_lead_max - trans_lead_min <= 0:
                 warnings.append("(Transition Lead Time Max.) - (Transition Lead Time Min.)"
                                 " is not greater then 0 for transition {id}!".format(id=trans_id))
+            try:
+                self.parse_time_intervals(trans_input.time_intervals_input)
+                self.check_time_intervals(trans_input.time_intervals_input.toPlainText())
+            except:
+                warnings.append("Invalid time intervals for transition {id}!".format(id=trans_id))
         return warnings
 
     def update_config_from_gui(self):
@@ -1039,6 +1101,10 @@ class MainGui:
         sim_config.use_only_values_from_guard_strings = ui.limit_variable_values_input.isChecked()
 
         sim_config.timestamp_millieseconds = ui.timestamp_millieseconds_input.isChecked()
+
+        sim_config.max_time_interval_variance = ui.max_variance_input.value()
+        sim_config.add_time_interval_variance = ui.variance_input.isChecked()
+        sim_config.time_intervals = self.parse_time_intervals(ui.time_intervals_input)
 
         if ui.seed_input.text():
             sim_config.random_seed = int(ui.seed_input.text())
@@ -1373,6 +1439,19 @@ class MainGui:
             if input[1].isChecked():
                 trans_config.included_vars.append(input[0])
 
+        trans_config.add_time_interval_variance = trans_input.variance_input.isChecked()
+        trans_config.max_time_interval_variance = trans_input.max_variance_input.value()
+        trans_config.time_intervals = self.parse_time_intervals(trans_input.time_intervals_input)
+
+    def parse_time_intervals(self, time_intervals_input):
+        input_text = time_intervals_input.toPlainText().replace(" ", "").replace("\n", "")
+        if input_text == "":
+            return []
+        if ";" in input_text:
+            return input_text.split(";")
+        else:
+            return [input_text]
+
     def get_variable_checkbox_by_name(self, name, inputs):
         for input in inputs:
             if input[0] == name:
@@ -1398,9 +1477,12 @@ class MainGui:
         self.sim_config_layout.setSpacing(10)
         ui = self.window.ui
         ui.scrollAreaWidgetContents.setLayout(self.transition_layout)
+
+        self.transition_layout.addWidget(ui.general_config_2)
+
         ui.scrollAreaWidgetContents_3.setLayout(self.variable_layout)
         ui.scrollAreaWidgetContents_7.setLayout(self.sim_config_layout)
-        ui.general_config_2.setFixedHeight(391)
+        ui.general_config_2.setFixedHeight(651)
         ui.general_config_3.setFixedHeight(71)
 
         widgets = [ui.sim_strategy,
@@ -1715,6 +1797,7 @@ class MainGui:
 
         delay_min_input = [widget.findChild(QSpinBox, name="time_delay_minimum_days_input"),
                            widget.findChild(QTimeEdit, name="time_delay_minimum_time_input")]
+        delay_min_input[1].setTime(QTime(0, 0, 0))
 
         delay_max_input = [widget.findChild(QSpinBox, name="time_delay_maximum_days_input"),
                            widget.findChild(QTimeEdit, name="time_delay_maximum_time_input")]
@@ -1727,6 +1810,7 @@ class MainGui:
 
         lead_min_input = [widget.findChild(QSpinBox, name="time_lead_minimum_days_input"),
                           widget.findChild(QTimeEdit, name="time_lead_minimum_time_input")]
+        lead_min_input[1].setTime(QTime(0, 0, 0))
 
         lead_max_input = [widget.findChild(QSpinBox, name="time_lead_maximum_days_input"),
                           widget.findChild(QTimeEdit, name="time_lead_maximum_time_input")]
@@ -1736,6 +1820,9 @@ class MainGui:
         scroll_area = widget.findChild(QWidget, name="scroll_area_contents")
 
         no_time_forwarding_input = widget.findChild(QCheckBox, name="no_time_forwarding_input")
+        variance_input = widget.findChild(QCheckBox, name="variance_input")
+        max_variance_input = widget.findChild(QSpinBox, name="max_variance_input")
+        time_intervals_input = widget.findChild(QPlainTextEdit, name="time_intervals_input")
 
         layout = QVBoxLayout()
         layout.setSpacing(3)
@@ -1773,10 +1860,14 @@ class MainGui:
                                       delay_min_input, delay_max_input, lead_mean_input,
                                       lead_min_input, lead_max_input, lead_sd_input,
                                       general_config_input, widget, scroll_area, included_vars,
-                                      no_time_forwarding_input)
+                                      no_time_forwarding_input, variance_input, max_variance_input,
+                                      time_intervals_input)
         weight_input.setValue(1)
         activity_name_input.setText(transition.name)
         trans_input.general_config_input.stateChanged.connect(
+            lambda: self.change_transition_input_widget(trans_input))
+
+        trans_input.variance_input.stateChanged.connect(
             lambda: self.change_transition_input_widget(trans_input))
 
         trans_input.no_time_forwarding_input.stateChanged.connect(
@@ -1809,6 +1900,9 @@ class MainGui:
             trans_input.lead_sd_input[0].setEnabled(False)
             trans_input.lead_sd_input[1].setEnabled(False)
             trans_input.no_time_forwarding_input.setEnabled(False)
+            trans_input.time_intervals_input.setEnabled(False)
+            trans_input.variance_input.setEnabled(False)
+            trans_input.max_variance_input.setEnabled(False)
         elif trans_input.no_time_forwarding_input.isChecked():
             trans_input.mean_delay_input[0].setEnabled(False)
             trans_input.mean_delay_input[1].setEnabled(False)
@@ -1827,6 +1921,9 @@ class MainGui:
             trans_input.lead_sd_input[0].setEnabled(False)
             trans_input.lead_sd_input[1].setEnabled(False)
             trans_input.no_time_forwarding_input.setEnabled(True)
+            trans_input.time_intervals_input.setEnabled(True)
+            trans_input.variance_input.setEnabled(False)
+            trans_input.max_variance_input.setEnabled(False)
         else:
             trans_input.mean_delay_input[0].setEnabled(True)
             trans_input.mean_delay_input[1].setEnabled(True)
@@ -1845,6 +1942,12 @@ class MainGui:
             trans_input.lead_sd_input[0].setEnabled(True)
             trans_input.lead_sd_input[1].setEnabled(True)
             trans_input.no_time_forwarding_input.setEnabled(True)
+            trans_input.time_intervals_input.setEnabled(True)
+            trans_input.variance_input.setEnabled(True)
+            if trans_input.variance_input.isChecked():
+                trans_input.max_variance_input.setEnabled(True)
+            else:
+                trans_input.max_variance_input.setEnabled(False)
 
     def set_output_dir(self):
         my_dir = QFileDialog.getExistingDirectory(self.window, "Open a folder", os.getcwd())
@@ -2000,12 +2103,6 @@ class MainGui:
                                 success = self.load_pnml(model_path)
                                 if success:
                                     self.main.config.read_config_file(file_path, self.main.model)
-                                    # print("ssss")
-                                    # for trans in self.main.model.transitions:
-                                    #    config = self.main.config.simulation_config.get_trans_config_by_id(
-                                    #        trans.id)
-                                    #    config.activity_name = trans.name
-                                    #    print(trans.name)
                                     self.update_gui_from_config()
                                     msg = QMessageBox()
                                     msg.setIcon(QMessageBox.NoIcon)
@@ -2192,6 +2289,13 @@ class MainGui:
         ui.timestamp_millieseconds_input.setChecked(
             config.simulation_config.timestamp_millieseconds)
 
+        time_intervals_string = ""
+        for time_interval in config.simulation_config.time_intervals:
+            time_intervals_string += time_interval + ";\n"
+        ui.time_intervals_input.setPlainText(time_intervals_string[:-2])
+        ui.max_variance_input.setValue(config.simulation_config.max_time_interval_variance)
+        ui.variance_input.setChecked(config.simulation_config.add_time_interval_variance)
+
         for trans_config in sim_config.transition_configs:
             self.update_trans_input_from_config(trans_config)
 
@@ -2242,12 +2346,21 @@ class MainGui:
 
         trans_input.no_time_forwarding_input.setChecked(trans_config.no_time_forward)
 
+        trans_input.variance_input.setChecked(trans_config.add_time_interval_variance)
+        trans_input.max_variance_input.setValue(trans_config.max_time_interval_variance)
+        time_intervals_string = ""
+        for time_interval in trans_config.time_intervals:
+            time_intervals_string += time_interval + ";\n"
+        trans_input.time_intervals_input.setPlainText(time_intervals_string[:-2])
+
         for variable in self.main.model.variables:
             if variable.original_name in trans_config.included_vars:
-                self.get_variable_checkbox_by_name(variable.original_name, trans_input.included_vars) \
+                self.get_variable_checkbox_by_name(variable.original_name,
+                                                   trans_input.included_vars) \
                     .setChecked(True)
             else:
-                self.get_variable_checkbox_by_name(variable.original_name, trans_input.included_vars) \
+                self.get_variable_checkbox_by_name(variable.original_name,
+                                                   trans_input.included_vars) \
                     .setChecked(False)
 
     def get_trans_input_by_id(self, trans_id):
@@ -2258,7 +2371,6 @@ class MainGui:
 
     def update_var_input_from_config(self, var_config: SemanticInformation):
         var_input = self.get_var_input_by_name(var_config.variable_name)
-        #print(var_config.variable_name)
 
         variable = var_input.variable
         var_type = variable.type
@@ -2376,7 +2488,9 @@ class MainGui:
         return days, QTime(hours, minutes, seconds)
 
     def safe_config(self, file_path=None, only_safe=False):
-        self.main.config.model_file_path = self.main.model_path
+        if self.status == Status.MODEL_LOADED:
+            self.update_config_from_gui()
+            self.main.config.model_file_path = self.main.model_path
         if file_path is None:
             file_path = QFileDialog.getSaveFileName(self.window, 'Safe configuration', os.getcwd(),
                                                     "JSON File (*.json)")[0]
@@ -2391,7 +2505,8 @@ class MainGui:
                 if self.status == Status.MODEL_LOADED or self.status == Status.SIM_RUNNING:
                     warnings = []
                     for var_input in self.variable_inputs:
-                        warnings += self.check_values_config(var_input, var_input.variable.original_name,
+                        warnings += self.check_values_config(var_input,
+                                                             var_input.variable.original_name,
                                                              True)
                         warnings += self.check_dependencies_config(var_input,
                                                                    var_input.variable.original_name,
@@ -2425,6 +2540,12 @@ class MainGui:
                     except:
                         self.display_error_msg(str(traceback.format_exc()),
                                                "An Error occurred while saving the configuration!")
+
+    def change_variance_input(self):
+        if self.window.ui.variance_input.isChecked():
+            self.window.ui.max_variance_input.setEnabled(True)
+        else:
+            self.window.ui.max_variance_input.setEnabled(False)
 
     def change_perform_trace_estimation(self):
         if self.window.ui.trace_estimation_input.isChecked():

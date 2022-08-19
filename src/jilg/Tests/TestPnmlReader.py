@@ -2,10 +2,10 @@ from unittest import TestCase
 
 from src.jilg.Other.Global import VariableTypes
 from src.jilg.Main.PnmlReader import PnmlReader
+from src.jilg.Other.Global import test_files_path
 
 
 class TestPnmlReader(TestCase):
-    test_files_path = "../../../test_files/"
     model1_path = test_files_path + "test_dpn.pnml"
     model1_name = "my dpn"
     model1_id = "net1"

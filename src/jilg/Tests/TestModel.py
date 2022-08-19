@@ -1,10 +1,10 @@
 from copy import deepcopy
 from unittest import TestCase
 from src.jilg.Main.PnmlReader import PnmlReader
+from src.jilg.Other.Global import test_files_path
 
 
 class TestModel(TestCase):
-    test_files_path = "../../../test_files/"
     model_path = test_files_path + "test_dpn.pnml"
     reader: PnmlReader
     model_step1_enabled_transitions = ["n5"]

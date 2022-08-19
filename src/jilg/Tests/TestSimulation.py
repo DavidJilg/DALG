@@ -178,13 +178,13 @@ class TestSimulation(TestCase):
         transition1.config = trans_config1
         transition2.config = trans_config2
 
-        self.assertEqual("0:00:30.874913",
+        self.assertEqual("0:00:00.463425",
                          str(self.simulation.forward_time(transition1, transition2)))
 
         trans_config1.time_delay_min = 5
         trans_config1.time_delay_max = 60 * 5
 
-        self.assertEqual("0:02:10.435849",
+        self.assertEqual("0:00:01.139591",
                          str(self.simulation.forward_time(transition1, transition2)))
 
     def test_generate_trace_name(self):

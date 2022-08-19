@@ -24,6 +24,10 @@ class TransitionConfiguration:
 
     included_vars: list
 
+    time_intervals: list
+    add_time_interval_variance: bool
+    max_time_interval_variance: int
+
     def print_summary(self, print_list_elements=False):
         Global.print_summary_global(self, print_list_elements)
 
@@ -47,3 +51,7 @@ class TransitionConfiguration:
         self.lead_time_max = 1
 
         self.included_vars = []
+
+        self.time_intervals = []
+        self.add_time_interval_variance = False
+        self.max_time_interval_variance = 0

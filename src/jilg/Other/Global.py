@@ -4,8 +4,10 @@ from dateutil.parser import parse
 
 import pytz
 
-test_files_path = "E:/Google Drive/MASTER/Semester 4/Implementation/Mather-Thesis-Implementation/" \
-                  "test_files/"
+DALG_VERSION = "1.3.0"
+
+
+test_files_path = "../../resources/test_files/"  # relative path from test classes (src/jilg/Tests)
 
 standard_include_partial_traces = False
 standard_sim_strategy = "random"
@@ -20,17 +22,20 @@ standard_only_ending_traces = False
 standard_timestamp_anchor = parse(datetime.datetime.now(pytz.utc).isoformat())
 standard_utc_offset = 0
 standard_fixed_timestamp = False
-standard_avg_timestamp_delay = 60 * 10
-standard_timestamp_delay_sd = 60
-standard_model_has_no_loop = False
-standard_timestamp_delay_min = 0
-standard_timestamp_delay_max = 10
-standard_random_seed = 1701
 
-standard_avg_timestamp_lead = 60 * 3
+standard_random_seed = 1701
+standard_model_has_no_loop = False
+
+standard_avg_timestamp_delay = 0
+standard_timestamp_delay_sd = 1
+standard_timestamp_delay_min = 0
+standard_timestamp_delay_max = 1
+
+
+standard_avg_timestamp_lead = 0
 standard_timestamp_lead_min = 0
-standard_timestamp_lead_max = 60 * 6
-standard_timestamp_lead_sd = 60 * 3
+standard_timestamp_lead_max = 1
+standard_timestamp_lead_sd = 1
 
 standard_values_in_origin_event = True
 standard_include_invisible_transitions_in_log = False

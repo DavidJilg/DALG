@@ -80,7 +80,7 @@
         <x>10</x>
         <y>10</y>
         <width>411</width>
-        <height>391</height>
+        <height>651</height>
        </rect>
       </property>
       <property name="font">
@@ -510,7 +510,7 @@
          <x>-1</x>
          <y>10</y>
          <width>3</width>
-         <height>375</height>
+         <height>641</height>
         </rect>
        </property>
        <property name="frameShadow">
@@ -540,7 +540,7 @@
        <property name="geometry">
         <rect>
          <x>-1</x>
-         <y>370</y>
+         <y>635</y>
          <width>412</width>
          <height>31</height>
         </rect>
@@ -558,7 +558,7 @@
          <x>409</x>
          <y>10</y>
          <width>3</width>
-         <height>375</height>
+         <height>641</height>
         </rect>
        </property>
        <property name="frameShadow">
@@ -1013,6 +1013,123 @@
          <bool>false</bool>
         </property>
        </widget>
+      </widget>
+      <widget class="QCheckBox" name="variance_input">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>570</y>
+         <width>161</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This input allows you to add variance to the timestamp of an activity if the activity is at the beginning of a time interval. If this setting is not usesd all timestamps that are originally outside of the time intervals will be at the beginning of the next valid interval. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+      <widget class="QPlainTextEdit" name="time_intervals_input">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>410</y>
+         <width>391</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This input allows you to restrict when the activity can be performed. Therefore, a list of time intervals can be provided. If not Intervals are provided, no restrictions aply. The following syntax has to be used:&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Mon,Tue,Wed,Thu,Fri,Sat,Sun | 07:00:00-12:00:00;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Mon,Tue,Wed,Thu,Fri | 14:00:00-18:00:00;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;.....&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="initial_value_label_7">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>570</y>
+         <width>221</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This input allows you to add variance to the timestamp of an activity if the activity is at the beginning of a time interval. If this setting is not usesd all timestamps that are originally outside of the time intervals will be at the beginning of the next valid interval. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Add Time Interval Variance:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="initial_value_label_8">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>600</y>
+         <width>221</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This input allows you set the maximum variance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Maximum Variance (Minutes):</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="max_variance_input">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>600</y>
+         <width>161</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This input allows you set the maximum variance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="maximum">
+        <number>10000</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="output_dir_label_39">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>383</y>
+         <width>381</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This input allows you to restrict when the activity can be performed. Therefore, a list of time intervals can be provided. If not Intervals are provided, no restrictions aply. The following syntax has to be used:&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Mon,Tue,Wed,Thu,Fri,Sat,Sun | 07:00:00-12:00:00;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Mon,Tue,Wed,Thu,Fri | 14:00:00-18:00:00;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;.....&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Time Intervals:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
       </widget>
      </widget>
     </widget>
@@ -2962,6 +3079,24 @@ Model</string>
      </widget>
     </widget>
    </widget>
+   <widget class="QLabel" name="DALG_VERSION">
+    <property name="geometry">
+     <rect>
+      <x>1290</x>
+      <y>0</y>
+      <width>51</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -2976,6 +3111,7 @@ Model</string>
     <property name="font">
      <font>
       <pointsize>11</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
       <underline>false</underline>
       <strikeout>false</strikeout>

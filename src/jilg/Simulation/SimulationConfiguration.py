@@ -29,6 +29,9 @@ class SimulationConfiguration:
     timestamp_lead_min: int
     timestamp_lead_max: int
 
+    time_intervals: list
+    add_time_interval_variance: bool
+    max_time_interval_variance: int
 
     random_seed: int
     transition_configs: list
@@ -90,7 +93,9 @@ class SimulationConfiguration:
         self.merge_intervals = Global.standard_merge_intervals
         self.timestamp_millieseconds = True
 
-
+        self.time_intervals = []
+        self.add_time_interval_variance = False
+        self.max_time_interval_variance = 0
 
     def get_trans_config_by_id(self, id):
         for trans_config in self.transition_configs:

@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 
-from src.jilg.Main.PnmlReader import PnmlReader
 from src.jilg.Model.Distribution import Distribution
 from src.jilg.Other.Global import *
 from src.jilg.Model.SemanticInformation import SemanticInformation
@@ -141,6 +140,11 @@ class Configuration:
                                'timestamp_lead_sd': self.simulation_config.timestamp_lead_sd,
                                'timestamp_lead_min': self.simulation_config.timestamp_lead_min,
                                'timestamp_lead_max': self.simulation_config.timestamp_lead_max,
+
+                               'time_intervals': self.simulation_config.time_intervals,
+                               'add_time_interval_variance': self.simulation_config.add_time_interval_variance,
+                               'max_time_interval_variance': self.simulation_config.max_time_interval_variance,
+
                                'random_seed': self.simulation_config.random_seed,
                                'transition_configs': [],
                                'trace_names': self.simulation_config.trace_names,
@@ -188,7 +192,10 @@ class Configuration:
                              'time_delay_max': transition_config.time_delay_max,
                              'invisible': transition_config.invisible,
                              'included_vars': transition_config.included_vars,
-                             'no_time_forward': transition_config.no_time_forward}
+                             'no_time_forward': transition_config.no_time_forward,
+                             'time_intervals': transition_config.time_intervals,
+                             'add_time_interval_variance': transition_config.add_time_interval_variance,
+                             'max_time_interval_variance': transition_config.max_time_interval_variance}
 
         return trans_config_dict
 
@@ -304,6 +311,13 @@ class Configuration:
         sim_config.timestamp_lead_min = sim_config_dict['timestamp_lead_min']
         sim_config.timestamp_lead_max = sim_config_dict['timestamp_lead_max']
 
+        if 'time_intervals' in sim_config_dict.keys():
+            sim_config.time_intervals = sim_config_dict['time_intervals']
+        if 'add_time_interval_variance' in sim_config_dict.keys():
+            sim_config.add_time_interval_variance = sim_config_dict['add_time_interval_variance']
+        if 'max_time_interval_variance' in sim_config_dict.keys():
+            sim_config.max_time_interval_variance = sim_config_dict['max_time_interval_variance']
+
         sim_config.utc_offset = sim_config_dict["utc_offset"]
 
         sim_config.values_in_origin_event = sim_config_dict['values_in_origin_event']
@@ -320,13 +334,7 @@ class Configuration:
         if "timestamp_millieseconds" in sim_config_dict.keys():
             sim_config.timestamp_millieseconds = sim_config_dict["timestamp_millieseconds"]
 
-        #reader = PnmlReader()
-        #model, warnings = reader.read_pnml(self.model_file_path)
-
         for trans_config in sim_config_dict["transition_configs"]:
-            #if model.get_place_or_transition_by_id(trans_config["transition_id"]) is None:
-            #    pass
-            #else:
             sim_config.transition_configs.append(self.read_trans_config(trans_config))
 
         return sim_config
@@ -365,6 +373,12 @@ class Configuration:
             trans_config.included_vars = trans_config_dict["included_vars"]
         else:
             trans_config.included_vars = []
+        if "time_intervals" in trans_config_dict.keys():
+            trans_config.time_intervals = trans_config_dict["time_intervals"]
+        if "add_time_interval_variance" in trans_config_dict.keys():
+            trans_config.add_time_interval_variance = trans_config_dict["add_time_interval_variance"]
+        if "max_time_interval_variance" in trans_config_dict.keys():
+            trans_config.max_time_interval_variance = trans_config_dict["max_time_interval_variance"]
         if "no_time_forward" in trans_config_dict.keys():
             trans_config.no_time_forward = trans_config_dict["no_time_forward"]
 
