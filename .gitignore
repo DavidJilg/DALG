@@ -136,3 +136,5 @@ dmypy.json
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+
+event_log_config.json

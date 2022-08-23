@@ -10,7 +10,7 @@ from src.jilg.Main.XesWriter import XesWriter
 from src.jilg.Model.Model import Model
 from src.jilg.Main.ModelAnalyser import ModelAnalyser
 from src.jilg.Other import Global
-from src.jilg.Simulation.Simulation import Simulation
+from src.jilg.Simulation.Simulation import Simulation, SimStatus
 
 
 class Main:
@@ -26,7 +26,7 @@ class Main:
     seed: int
     sim_stop: bool
     thread: threading.Thread
-    sim_status: list
+    sim_status: SimStatus
     sim_exit_with_errors: bool
     errors: str
 
@@ -35,7 +35,7 @@ class Main:
         self.writer = XesWriter()
         self.analyser = ModelAnalyser()
         self.event_logs = []
-        self.sim_status = [0, 0, False, False, 0]
+        self.sim_status = SimStatus()
         self.sim_exit_with_errors = False
         self.errors = ""
 
@@ -64,9 +64,9 @@ class Main:
         self.simulation.config = self.config.simulation_config
         if gui_lock is not None:
             with gui_lock:
-                self.sim_status = [0, 0, False, False, 0]
+                self.sim_status = SimStatus()
         else:
-            self.sim_status = [0, 0, False, False, 0]
+            self.sim_status = SimStatus()
         self.simulation.run()
         if control_with_thread:
             self.thread = threading.Thread(target=self.control_simulation_thread, args=[gui_lock],
@@ -74,20 +74,19 @@ class Main:
             self.sim_stop = False
             self.thread.start()
         else:
-            sim_status = [0, 0, False, 0]
             try:
                 while True:
                     time.sleep(1)
                     with self.simulation.thread_status_lock:
-                        sim_status = self.simulation.thread_status[:]
+                        sim_status = self.simulation.sim_status
                     print("\nCurrent simulation status:")
-                    print("    Nr. of current event logs: {logs}".format(logs=str(sim_status[0])))
+                    print("    Nr. of current event logs: {logs}".format(logs=str(sim_status.nr_of_current_logs)))
                     print("    Nr. of current event log traces: {traces}"
-                          .format(traces=str(sim_status[1])))
+                          .format(traces=str(sim_status.nr_of_current_traces)))
                     if self.config.simulation_config.sim_strategy in ["random_exploration", "all"]:
                         print("    Possible traces estimation {traces}"
-                              .format(traces=str(sim_status[3])))
-                    if sim_status[2]:
+                              .format(traces=str(sim_status.nr_of_estimated_traces)))
+                    if sim_status.simulation_ended:
                         break
                 self.event_logs = self.simulation.event_logs
                 print("\nSimulation finished!\n\n{logs} event logs with a total number of {traces}"
@@ -125,7 +124,7 @@ class Main:
             while True:
                 time.sleep(0.1)
                 with self.simulation.thread_status_lock:
-                    status = self.simulation.thread_status[:]
+                    status = self.simulation.sim_status
                     if self.simulation.exit_with_errors:
                         raise Exception
                 with gui_lock:
@@ -133,7 +132,7 @@ class Main:
                     if self.sim_stop:
                         with self.simulation.thread_status_lock:
                             self.simulation.thread_stop = True
-                if status[2]:
+                if status.simulation_ended:
                     break
             if not self.sim_stop:
                 self.event_logs = self.simulation.event_logs
@@ -144,7 +143,7 @@ class Main:
             else:
                 with gui_lock:
                     with self.simulation.thread_status_lock:
-                        self.sim_status = self.simulation.thread_status[:]
+                        self.sim_status = self.simulation.sim_status
                         self.event_logs = self.simulation.event_logs
         except:
             self.sim_exit_with_errors = True

@@ -27,7 +27,7 @@ class Event:
                 if variable.original_name in model.get_place_or_transition_by_id(trans_id).config.included_vars:
                     if variable.type == VariableTypes.DATE:
                         try:
-                            date = (QDateTime.fromSecsSinceEpoch(variable.value).toPython()).isoformat()
+                            date = (QDateTime.fromSecsSinceEpoch(int(variable.value)).toPython()).isoformat()
                         except:
                             date = "2000-01-01T00:00:00+00:00"
                         self.variables.append((variable.original_name, date,

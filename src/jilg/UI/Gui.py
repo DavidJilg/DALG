@@ -5,6 +5,7 @@ import threading
 import time
 import traceback
 import webbrowser as wb
+from copy import copy
 
 from dateutil.parser import parse
 from PySide6.QtCore import Signal, QRunnable, Slot, QThreadPool, QObject, QTime, QDateTime, QFile, \
@@ -21,11 +22,11 @@ from src.jilg.Main.Main import Main
 from src.jilg.Model.Distribution import Distribution
 from src.jilg.Model.SemanticInformation import SemanticInformation
 from src.jilg.Model.Transition import Transition
-from src.jilg.Other.Global import VariableTypes
+from src.jilg.Other.Global import VariableTypes, print_summary_global
 from src.jilg.Model.Variable import Variable
 from src.jilg.Other import Global
 from src.jilg.Other.Global import Status
-from src.jilg.Simulation.Simulation import Weekday
+from src.jilg.Simulation.Simulation import Weekday, SimStatus
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 from src.jilg.Simulation.ValueGenerator import ValueGenerator
 from src.jilg.UI.MainWindow import Ui_MainWindow
@@ -39,10 +40,6 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
 
 
-class WorkerSignals(QObject):
-    sim_status = Signal(list)
-
-
 class EventLogWriter(QRunnable):
     main: Main
 
@@ -53,6 +50,31 @@ class EventLogWriter(QRunnable):
     @Slot()
     def run(self):
         self.main.write_event_logs(self.main.event_logs)
+
+
+class GuiUpdateInformation:
+    sim_status: SimStatus
+    sim_percentage: float
+    nr_of_total_traces: int
+    sim_strategy: str
+    errors_occurred: bool
+    errors: str
+
+    def __init__(self, sim_status=SimStatus(), sim_percentage=0.0, nr_of_total_traces=0, sim_strategy="", errors="",
+                 errors_occurred=False):
+        self.sim_status = copy(sim_status)
+        self.sim_percentage = sim_percentage
+        self.nr_of_total_traces = nr_of_total_traces
+        self.sim_strategy = sim_strategy
+        self.errors = errors
+        self.errors_occurred = errors_occurred
+
+    def print_summary(self, print_list_elements=False):
+        print_summary_global(self, print_list_elements)
+
+
+class WorkerSignals(QObject):
+    sim_status = Signal(GuiUpdateInformation)
 
 
 class SimStatusReporter(QRunnable):
@@ -92,64 +114,69 @@ class SimStatusReporter(QRunnable):
                 with self.thread_lock:
                     self.main.sim_stop = True
             with self.thread_lock:
-                sim_status = self.main.sim_status[:]
+                sim_status = self.main.sim_status
                 errors_occurred = self.main.sim_exit_with_errors
                 errors = self.main.errors
             if errors_occurred:
-                self.signals.sim_status.emit([0, 0, 0,
-                                              0, 0, 0, errors, 0, 0, 0, 0])
+                self.signals.sim_status.emit(GuiUpdateInformation(errors=errors, errors_occurred=True))
                 break
-            if sim_status[2]:
+            if sim_status.simulation_ended:
                 break
             if self.sim_strat == "random":
-                nr_of_current_traces = (sim_status[0] * self.nr_of_traces) + sim_status[1]
+                nr_of_current_traces = (sim_status.nr_of_current_logs * self.nr_of_traces) + \
+                                       sim_status.nr_of_current_traces
                 percentage = 100 * (nr_of_current_traces / self.total_traces)
                 if percentage < 1:
                     percentage = 1
-                self.signals.sim_status.emit([percentage, sim_status[0], nr_of_current_traces,
-                                              sim_status[2], self.sim_strat])
+                self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                                                  nr_of_total_traces=nr_of_current_traces,
+                                                                  sim_strategy=self.sim_strat))
             elif self.sim_strat == "random_exploration" or self.sim_strat == "all":
-                nr_of_current_traces = sim_status[1]
-                if not sim_status[4]:  # Trace estimation running
+                nr_of_current_traces = sim_status.nr_of_current_traces
+                if not sim_status.trace_estimation_running:
                     percentage = 0
                 else:
-                    if sim_status[3] != 0:
-                        percentage = 100 * (nr_of_current_traces / sim_status[3])
+                    if sim_status.nr_of_estimated_traces != 0:
+                        percentage = 100 * (nr_of_current_traces / sim_status.nr_of_estimated_traces)
                     else:
                         percentage = 100 * (nr_of_current_traces /
                                             self.main.config.simulation_config.number_of_traces)
                     if percentage < 1:
                         percentage = 1
-                self.signals.sim_status.emit([percentage, sim_status[0], nr_of_current_traces,
-                                              sim_status[2], self.sim_strat, sim_status[3],
-                                              sim_status[4]])
+
+                self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                                                  nr_of_total_traces=nr_of_current_traces,
+                                                                  sim_strategy=self.sim_strat))
 
         # Sim ended
         if self.sim_strat == "random":
             if self.sim_stop:
-                nr_of_current_traces = sim_status[1]
+                nr_of_current_traces = sim_status.nr_of_current_traces
             else:
-                nr_of_current_traces = (sim_status[0] * self.nr_of_traces) + sim_status[1]
+                nr_of_current_traces = (sim_status.nr_of_current_logs * self.nr_of_traces) + \
+                                       sim_status.nr_of_estimated_traces
             percentage = 100 * (nr_of_current_traces / self.total_traces)
             if percentage < 1:
                 percentage = 1
-            self.signals.sim_status.emit([percentage, sim_status[0], nr_of_current_traces,
-                                          sim_status[2], self.sim_strat])
+            self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                                              nr_of_total_traces=nr_of_current_traces,
+                                                              sim_strategy=self.sim_strat))
         elif self.sim_strat == "random_exploration" or self.sim_strat == "all":
-            nr_of_current_traces = sim_status[1]
-            if not sim_status[4]:  # Trace estimation running
+            nr_of_current_traces = sim_status.nr_of_current_traces
+            if not sim_status.trace_estimation_running:
                 percentage = 0
             else:
-                if sim_status[3] != 0:
-                    percentage = 100 * (nr_of_current_traces / sim_status[3])
+                if sim_status.nr_of_estimated_traces != 0:
+                    percentage = 100 * (nr_of_current_traces / sim_status.nr_of_estimated_traces)
                 else:
                     percentage = 100 * (nr_of_current_traces /
                                         self.main.config.simulation_config.number_of_traces)
                 if percentage < 1:
                     percentage = 1
-            self.signals.sim_status.emit([percentage, sim_status[0], nr_of_current_traces,
-                                          sim_status[2], self.sim_strat, sim_status[3],
-                                          sim_status[4]])
+
+            self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                                              nr_of_total_traces=nr_of_current_traces,
+                                                              sim_strategy=self.sim_strat))
 
 
 class VariableInput:
@@ -297,6 +324,7 @@ class MainGui:
                     self.show_welcome_screen()
         else:
             self.create_preference_file(preference_path)
+            self.show_welcome_screen()
 
     def show_welcome_screen(self):
         preference_path = os.getcwd() + "/src/resources/preferences.json"
@@ -368,28 +396,29 @@ class MainGui:
                                "QLabel{font-size: 11pt;}"
                                "QComboBox{font-size: 10pt;}")
 
-    def update_gui_with_sim_status(self, sim_status):
-        if len(sim_status) > 7:  # Simulation error
+    def update_gui_with_sim_status(self, update_info: GuiUpdateInformation):
+        if update_info.errors_occurred:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setText("An error occured during the simulation. The simulation was aborted!")
-            msg.setInformativeText(str(sim_status[6]))
+            msg.setInformativeText(str(update_info.errors))
             msg.setWindowTitle("Error!")
             msg.setButtonText(1, "Ok")
             msg.exec()
-            ret = QMessageBox.question(self.window, '', "Write unfinished event logs to"
-                                                        " output directory?"
-                                       .format(x=len(self.main.event_logs)),
-                                       QMessageBox.Yes | QMessageBox.No)
+            if "No traces possible" not in update_info.errors:
+                ret = QMessageBox.question(self.window, '', "Write unfinished event logs to"
+                                                            " output directory?"
+                                           .format(x=len(self.main.event_logs)),
+                                           QMessageBox.Yes | QMessageBox.No)
 
-            if ret == QMessageBox.Yes:
-                self.window.ui.sim_status_label.setText("Writing Event Logs to {out_dir}"
-                                                        .format(out_dir=self.main.config
-                                                                .output_directory_path))
-                worker = EventLogWriter(self.main)
-                self.threadpool = QThreadPool()
-                self.threadpool.start(worker)
-                self.window.ui.sim_status_label.setText("Not Running")
+                if ret == QMessageBox.Yes:
+                    self.window.ui.sim_status_label.setText("Writing Event Logs to {out_dir}"
+                                                            .format(out_dir=self.main.config
+                                                                    .output_directory_path))
+                    worker = EventLogWriter(self.main)
+                    self.threadpool = QThreadPool()
+                    self.threadpool.start(worker)
+                    self.window.ui.sim_status_label.setText("Not Running")
             self.window.ui.start_simulation_button.setEnabled(True)
             self.window.ui.stop_simulation_button.setEnabled(False)
             self.window.ui.progressBar.setValue(0)
@@ -401,36 +430,36 @@ class MainGui:
             self.sim_stop = False
             self.reset_everything_after_simulation_exception()
         else:
-            if sim_status[4] == "random":
-                self.window.ui.progressBar.setValue(sim_status[0])
-                self.window.ui.label_6.setText(str(sim_status[1]))
-                self.window.ui.label_8.setText(str(sim_status[2]))
-            elif sim_status[4] in ["random_exploration", "all"]:
-                if not sim_status[6]:  # trace_estimation_running
+            if update_info.sim_strategy == "random":
+                self.window.ui.progressBar.setValue(update_info.sim_percentage)
+                self.window.ui.label_6.setText(str(update_info.sim_status.nr_of_current_logs))
+                self.window.ui.label_8.setText(str(update_info.nr_of_total_traces))
+            elif update_info.sim_strategy in ["random_exploration", "all"]:
+                if not update_info.sim_status.trace_estimation_running:
                     self.window.ui.sim_status_label.setText("Trace estimation running!")
                 else:
                     self.window.ui.sim_status_label.setText("Trace generation running!")
-                self.window.ui.progressBar.setValue(sim_status[0])
-                self.window.ui.label_6.setText(str(sim_status[1]))
-                self.window.ui.label_8.setText(str(sim_status[2]))
+                self.window.ui.progressBar.setValue(update_info.sim_percentage)
+                self.window.ui.label_6.setText(str(update_info.sim_status.nr_of_current_logs))
+                self.window.ui.label_8.setText(str(update_info.nr_of_total_traces))
                 try:
-                    sim_status5 = int(sim_status[5])
+                    sim_status5 = int(update_info.sim_status.nr_of_estimated_traces)
                     self.window.ui.label_10.setText(str(sim_status5))
                 except:
                     self.window.ui.label_10.setText("0")
-            else:
-                pass
-            if sim_status[4] == "random_exploration":
-                if sim_status[3]:
-                    self.simulation_ended(sim_status[1], sim_status[2], not sim_status[6])
-            else:
-                if sim_status[3]:
-                    self.simulation_ended(sim_status[1], sim_status[2], False)
+
+            if update_info.sim_status.simulation_ended:
+                self.simulation_ended(update_info)
 
     def reset_everything_after_simulation_exception(self):
         pass
 
-    def simulation_ended(self, logs, traces, trace_estimation_abort):
+    # def simulation_ended(self, logs, traces, trace_estimation_abort):
+    def simulation_ended(self, update_info):
+        if update_info.sim_strategy == "random_exploration":
+            trace_estimation_abort = not update_info.sim_status.trace_estimation_running
+        else:
+            trace_estimation_abort = False
         if trace_estimation_abort:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.NoIcon)
@@ -458,7 +487,7 @@ class MainGui:
                         msg_string = "{x} event log has been generated.\n" \
                                      " Should it be written to the output directory?"
                     ret = QMessageBox.question(self.window, 'Simulation ended!', msg_string
-                                               .format(x=logs),
+                                               .format(x=update_info.sim_status.nr_of_current_logs),
                                                QMessageBox.Yes | QMessageBox.No)
 
                     if ret == QMessageBox.Yes:
@@ -485,13 +514,14 @@ class MainGui:
                 msg.setIcon(QMessageBox.NoIcon)
                 msg.setText("Simulation finished!")
                 msg.setWindowTitle("Success!")
-                if logs > 1:
+                if update_info.sim_status.nr_of_current_logs > 1:
                     msg.setInformativeText(
                         "{logs} event logs with a total number of {traces} traces"
-                        " were generated!".format(logs=logs, traces=traces))
+                        " were generated!".format(logs=update_info.sim_status.nr_of_current_logs,
+                                                  traces=update_info.nr_of_total_traces))
                 else:
                     msg.setInformativeText("One event log with {traces} traces was generated!"
-                                           .format(traces=traces))
+                                           .format(traces=update_info.nr_of_total_traces))
                 msg.setButtonText(1, "Ok")
                 msg.exec()
                 self.window.ui.start_simulation_button.setEnabled(True)
@@ -1210,7 +1240,7 @@ class MainGui:
             other_arguments_dict = {"minimum": var_config.min,
                                     "maximum": var_config.max,
                                     "mean": var_input.distributions_mean_input.
-                                        dateTime().toSecsSinceEpoch(),
+                                    dateTime().toSecsSinceEpoch(),
                                     "standard_deviation": self.get_seconds_from_days_and_QTimeEdit(
                                         var_input.distributions_sd_input[0],
                                         var_input.distributions_sd_input[1])}

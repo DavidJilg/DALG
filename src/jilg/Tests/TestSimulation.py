@@ -12,7 +12,7 @@ from src.jilg.Model.Transition import Transition
 from src.jilg.Other import Global
 from src.jilg.Simulation.Event import Event
 from src.jilg.Simulation.EventLog import EventLog
-from src.jilg.Simulation.Simulation import Simulation
+from src.jilg.Simulation.Simulation import Simulation, SimStatus
 from src.jilg.Simulation.SimulationConfiguration import SimulationConfiguration
 from src.jilg.Simulation.Trace import Trace
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
@@ -226,126 +226,12 @@ class TestSimulation(TestCase):
 
         self.assertEqual(2, self.simulation.used_trace_name_count["traceA"])
         self.assertEqual(3, self.simulation.used_trace_name_count["traceB"])
-    '''
-    def test_random_trace_generation(self):
-        main = Main()
-        main.model_path = Global.test_files_path + "test_dpn5.pnml"
-        main.initialize_model_and_config(Global.test_files_path + "output/")
-        main.analyse_model()
-        main.config.semantic_information[0].values.append("other_value")
-        main.config.number_of_event_logs = 1
-        main.config.logs_in_one_file = False
-        main.config.simulation_config.sim_strategy = "random"
-        main.config.simulation_config.number_of_traces = 1
-        main.config.simulation_config.only_ending_traces = False
-        main.config.simulation_config.max_trace_length = 20
-        main.config.simulation_config.max_trace_duplicates = 100000
-        main.config.simulation_config.duplicates_with_data_perspective = False
-        main.config.simulation_config.max_loop_iterations = 3
-        main.config.simulation_config.get_trans_config_by_id("n11").weight = 1
-        main.config.simulation_config.get_trans_config_by_id("n9").weight = 1
-        main.config.simulation_config.trace_names = ["traceA", "traceB"]
-        main.config.simulation_config.allow_duplicate_trace_names = False
-        main.config.event_log_name = "event_log"
-        main.config.simulation_config.fixed_timestamp = True
-        main.config.simulation_config.transition_configs[0].avg_lead_time = 60 * 20
-        main.config.simulation_config.transition_configs[0].lead_time_sd = 60
-        main.config.simulation_config.transition_configs[0].lead_time_min = 60 * 1
-        main.config.simulation_config.transition_configs[0].lead_time_max = 60 * 40
-        main.run_simulation(False, gui_lock=threading.Lock())
 
-        event_names = [event.name for event in main.event_logs[0].traces[0].events]
-        self.assertEqual(["t1", "t2", "t4", "t2_2", "t5", "t7"], event_names)
-
-        events = main.event_logs[0].traces[0].events
-        self.assertEqual(1, len(events[0].variables))
-        self.assertEqual(2, len(events[1].variables))
-        self.assertEqual(3, len(events[2].variables))
-
-        self.assertEqual("value5", events[2].variables[1][1])
-        self.assertEqual("value1", events[2].variables[2][1])
-
-    def test_random_trace_generation_with_normal_distribution(self):
-        main = Main()
-        main.model_path = Global.test_files_path + "test_dpn5_distribution.pnml"
-        main.initialize_model_and_config(Global.test_files_path + "output/")
-        main.analyse_model()
-        main.config.semantic_information[0].values.append("other_value")
-        main.config.number_of_event_logs = 1
-        main.config.logs_in_one_file = False
-        main.config.simulation_config.sim_strategy = "random"
-        main.config.simulation_config.number_of_traces = 1
-        main.config.simulation_config.only_ending_traces = False
-        main.config.simulation_config.max_trace_length = 20
-        main.config.simulation_config.max_trace_duplicates = 100000
-        main.config.simulation_config.duplicates_with_data_perspective = False
-        main.config.simulation_config.max_loop_iterations = 3
-        main.config.simulation_config.get_trans_config_by_id("n11").weight = 1
-        main.config.simulation_config.get_trans_config_by_id("n9").weight = 1
-        main.config.simulation_config.trace_names = ["traceA", "traceB"]
-        main.config.simulation_config.allow_duplicate_trace_names = False
-        main.config.event_log_name = "event_log"
-        main.config.simulation_config.fixed_timestamp = True
-        main.config.simulation_config.transition_configs[0].avg_lead_time = 60 * 20
-        main.config.simulation_config.transition_configs[0].lead_time_sd = 60
-        main.config.simulation_config.transition_configs[0].lead_time_min = 60 * 1
-        main.config.simulation_config.transition_configs[0].lead_time_max = 60 * 40
-
-        var1 = main.model.get_variable_by_name("variable1")
-        sem_infor_var1 = var1.semantic_information
-        sem_infor_var1.has_distribution = True
-        sem_infor_var1.distribution = Distribution(np.random.default_rng(1701), "truncated_normal",
-                                                   {"mean": 5.0, "standard_deviation": 0.2,
-                                                    "minimum": var1.min_value,
-                                                    "maximum": var1.max_value})
-        sem_infor_var1.has_distribution = True
-
-        main.run_simulation(False)
-
-        self.assertEqual(4.672681147010576, main.event_logs[0].traces[0].events[1].variables[1][1])
-
-        main = Main()
-        main.model_path = Global.test_files_path + "test_dpn5_distribution2.pnml"
-        main.initialize_model_and_config(Global.test_files_path + "output/")
-        main.analyse_model()
-        main.config.semantic_information[0].values.append("other_value")
-        main.config.number_of_event_logs = 1
-        main.config.logs_in_one_file = False
-        main.config.simulation_config.sim_strategy = "random"
-        main.config.simulation_config.number_of_traces = 1
-        main.config.simulation_config.only_ending_traces = False
-        main.config.simulation_config.max_trace_length = 20
-        main.config.simulation_config.max_trace_duplicates = 100000
-        main.config.simulation_config.duplicates_with_data_perspective = False
-        main.config.simulation_config.max_loop_iterations = 3
-        main.config.simulation_config.get_trans_config_by_id("n11").weight = 1
-        main.config.simulation_config.get_trans_config_by_id("n9").weight = 1
-        main.config.simulation_config.trace_names = ["traceA", "traceB"]
-        main.config.simulation_config.allow_duplicate_trace_names = False
-        main.config.event_log_name = "event_log"
-        main.config.simulation_config.fixed_timestamp = True
-        main.config.simulation_config.transition_configs[0].avg_lead_time = 60 * 20
-        main.config.simulation_config.transition_configs[0].lead_time_sd = 60
-        main.config.simulation_config.transition_configs[0].lead_time_min = 60 * 1
-        main.config.simulation_config.transition_configs[0].lead_time_max = 60 * 40
-
-        var1 = main.model.get_variable_by_name("variable1")
-        sem_infor_var1 = var1.semantic_information
-        sem_infor_var1.has_distribution = True
-        sem_infor_var1.distribution = Distribution(np.random.default_rng(1701), "truncated_normal",
-                                                   {"mean": 5.0, "standard_deviation": 0.2,
-                                                    "minimum": var1.min_value,
-                                                    "maximum": var1.max_value})
-
-        main.run_simulation(False)
-        self.assertEqual(4, main.event_logs[0].traces[0].events[1].variables[1][1])
-    
-    '''
     def test_calculate_possible_traces(self):
         reader = PnmlReader()
         model, errors = reader.read_pnml(Global.test_files_path + "test_dpn.pnml")
         self.simulation.thread_stop = False
-        self.simulation.thread_status = [0, 0, False, -1, False]
+        self.simulation.sim_status = SimStatus(nr_estimation_traces=-1)
         self.simulation.config.number_of_traces = 5
         tuple = self.simulation.calculate_possible_traces(model)
         self.assertEqual(2, tuple[0])

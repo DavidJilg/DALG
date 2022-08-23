@@ -19,6 +19,7 @@ from src.jilg.Simulation.EventLog import EventLog
 from src.jilg.Simulation.SimulationConfiguration import SimulationConfiguration
 from src.jilg.Simulation.Trace import Trace
 from scipy.stats import truncnorm
+from src.jilg.Other.Global import print_summary_global
 
 from src.jilg.Simulation.ValueGenerator import ValueGenerator
 
@@ -31,6 +32,24 @@ class Weekday(Enum):
     Fri = 4
     Sat = 5
     Sun = 6
+
+
+class SimStatus:
+    nr_of_current_logs: int
+    nr_of_current_traces: int
+    nr_of_estimated_traces: int
+    simulation_ended: bool
+    trace_estimation_running: bool
+
+    def __init__(self, nr_logs=0, nr_traces=0, sim_ended=False, nr_estimation_traces=0, estimation_running=False):
+        self.nr_of_current_logs = nr_logs
+        self.nr_of_current_traces = nr_traces
+        self.nr_of_estimated_traces = nr_estimation_traces
+        self.simulation_ended = sim_ended
+        self.trace_estimation_running = estimation_running
+
+    def print_summary(self, print_list_elements=False):
+        print_summary_global(self, print_list_elements)
 
 
 class DiscreteVariableValue:
@@ -73,7 +92,7 @@ class Simulation:
     value_generator: ValueGenerator
     possible_traces: (
         int, list, list, bool)  # number_of_possible_traces, valid_ending_traces, other_traces, loop
-    thread_status: list
+    sim_status: SimStatus
     thread_stop: bool
     exit_with_errors: bool
     errors: str
@@ -98,7 +117,7 @@ class Simulation:
         np.random.seed(int(self.rng.uniform(0, 1000)))
         self.thread_status_lock = threading.Lock()
         self.value_generator = ValueGenerator(model, self.rng)
-        self.thread_status = []
+        self.sim_status = SimStatus()
         self.exit_with_errors = False
         self.errors = ""
 
@@ -125,24 +144,15 @@ class Simulation:
             if self.config.sim_strategy == "random":
                 sim_thread = threading.Thread(target=self.run_random_trace_generation, daemon=True)
                 with self.thread_status_lock:
-                    self.thread_status = [0, 0, False]
-                    # nr_of_current_logs
-                    # nr_of_current_traces
-                    # sim_ended
+                    self.sim_status = SimStatus()
                 sim_thread.start()
             elif self.config.sim_strategy == "random_exploration":
                 self.config.max_trace_duplicates = 0
-                # self.config.duplicates_with_data_perspective = False
                 self.config.model_has_no_increasing_loop = True
                 if self.config.perform_trace_estimation:
-                    self.thread_status = [0, 0, False, -1, False]
+                    self.sim_status = SimStatus(nr_estimation_traces=-1)
                 else:
-                    self.thread_status = [0, 0, False, 0, True]
-                    # nr_of_current_logs
-                    # nr_of_current_traces
-                    # sim_ended
-                    # possible_traces_estimation
-                    # trace_estimation_finished
+                    self.sim_status = SimStatus(estimation_running=True)
                 sim_thread = threading.Thread(target=self.run_random_exploration, daemon=True)
                 sim_thread.start()
             else:
@@ -150,10 +160,9 @@ class Simulation:
                 self.config.perform_trace_estimation = True
                 self.config.duplicates_with_data_perspective = False
                 self.config.model_has_no_increasing_loop = True
-                self.thread_status = [0, 0, False, -1, False]
+                self.sim_status = SimStatus(nr_estimation_traces=-1)
                 sim_thread = threading.Thread(target=self.run_full_exploration, daemon=True)
                 sim_thread.start()
-                pass
         except:
             self.exit_with_errors = True
             self.errors = str(traceback.format_exc())
@@ -165,7 +174,7 @@ class Simulation:
         partial_traces = []
         self.recursive_trace_estimation(valid_traces, other_traces, partial_traces, model_copy, [],
                                         [], [], [])
-        self.thread_status[4] = True
+        self.sim_status.trace_estimation_running = True
         if self.config.include_partial_traces:
             return len(valid_traces) + len(other_traces) + len(partial_traces), valid_traces, \
                    other_traces, partial_traces
@@ -181,9 +190,9 @@ class Simulation:
             current_trace_length = len(current_no_invisible_trace)
         if not current_trace_length > self.config.max_trace_length:
             if self.thread_stop:
-                self.thread_status[0] = len(self.event_logs)
-                self.thread_status[1] = 0
-                self.thread_status[2] = True
+                self.sim_status.nr_of_current_logs = len(self.event_logs)
+                self.sim_status.nr_of_current_traces = 0
+                self.sim_status.simulation_ended = True
             else:
                 if self.config.only_ending_traces:
                     nr_of_traces = len(valid_traces)
@@ -193,7 +202,7 @@ class Simulation:
                         nr_of_traces += len(partial_traces)
                 if nr_of_traces < self.config.number_of_traces:
                     with self.thread_status_lock:
-                        self.thread_status[3] = nr_of_traces
+                        self.sim_status.nr_of_estimated_traces = nr_of_traces
                     if model.is_in_final_state():
                         if current_trace_length >= self.config.min_trace_length:
                             valid_traces.append(current_trace[:])
@@ -270,17 +279,17 @@ class Simulation:
                     if self.config.fixed_timestamp:
                         self.current_time = self.config.timestamp_anchor
                     with self.thread_status_lock:
-                        self.thread_status[0] = len(self.event_logs)
-                        self.thread_status[1] = len(self.current_event_log.traces)
-                        self.thread_status[2] = False
+                        self.sim_status.nr_of_current_logs = len(self.event_logs)
+                        self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                        self.sim_status.simulation_ended = False
                     with self.thread_status_lock:
                         if self.thread_stop:
                             break_var = True
                 with self.thread_status_lock:
                     if self.thread_stop:
-                        self.thread_status[0] = len(self.event_logs)
-                        self.thread_status[1] = 0
-                        self.thread_status[2] = True
+                        self.sim_status.nr_of_current_logs = len(self.event_logs)
+                        self.sim_status.nr_of_current_traces = 0
+                        self.sim_status.simulation_ended = True
                         break_var = True
                     self.model.reset()
                     self.model.generate_initial_values(self.value_generator)
@@ -292,15 +301,15 @@ class Simulation:
                         self.model.generate_initial_values(self.value_generator)
                         self.set_up_sim()
             with self.thread_status_lock:
-                self.thread_status[0] = len(self.event_logs)
+                self.sim_status.nr_of_current_logs = len(self.event_logs)
                 if break_var:
                     nr_of_traces = 0
                     for log in self.event_logs:
                         nr_of_traces += len(log.traces)
-                    self.thread_status[1] = nr_of_traces
+                    self.sim_status.nr_of_current_traces = nr_of_traces
                 else:
-                    self.thread_status[1] = len(self.current_event_log.traces)
-                self.thread_status[2] = True
+                    self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                self.sim_status.simulation_ended = True
         except:
             self.exit_with_errors = True
             self.errors = str(traceback.format_exc())
@@ -319,6 +328,7 @@ class Simulation:
     def run_random_exploration(self):
         self.current_event_log = EventLog(self.event_log_name,
                                           self.event_log_creator)
+        no_traces_possible = False
         try:
             if self.config.perform_trace_estimation:
                 self.possible_traces = self.calculate_possible_traces(self.model)
@@ -326,10 +336,13 @@ class Simulation:
                     nr_of_possible_traces = len(self.possible_traces[1])
                 else:
                     nr_of_possible_traces = self.possible_traces[0]
+                if nr_of_possible_traces == 0:
+                    no_traces_possible = True
+                    raise Exception
             else:
                 nr_of_possible_traces = 0
             with self.thread_status_lock:
-                self.thread_status = [0, 0, False, nr_of_possible_traces, True]
+                self.sim_status = SimStatus(0, 0, False, nr_of_possible_traces, True)
             while len(self.current_event_log.traces) < nr_of_possible_traces or \
                     not self.config.perform_trace_estimation:
                 time_before_trace = copy(self.current_time)
@@ -360,31 +373,39 @@ class Simulation:
                         break
                     elif len(self.current_event_log.traces) >= self.config.number_of_traces:
                         break
-                    self.thread_status[0] = len(self.event_logs)
-                    self.thread_status[1] = len(self.current_event_log.traces)
-                    self.thread_status[2] = False
+                    self.sim_status.nr_of_current_logs = len(self.event_logs)
+                    self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                    self.sim_status.simulation_ended = False
             with self.thread_status_lock:
                 self.model.reset()
                 self.model.generate_initial_values(self.value_generator)
                 self.event_logs.append(self.current_event_log)
-                self.thread_status[0] = len(self.event_logs)
-                self.thread_status[1] = len(self.current_event_log.traces)
-                self.thread_status[2] = True
+                self.sim_status.nr_of_current_logs = len(self.event_logs)
+                self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                self.sim_status.simulation_ended = True
         except:
             self.exit_with_errors = True
-            self.errors = str(traceback.format_exc())
+            if no_traces_possible:
+                self.errors = "No traces possible with the current model/configuration could be found. Check if," \
+                              " for example, the minimum trace length does not exceed all traces possible in the model!"
+            else:
+                self.errors = str(traceback.format_exc())
 
     def run_full_exploration(self):
         self.current_event_log = EventLog(self.event_log_name,
                                           self.event_log_creator)
+        no_traces_possible = False
         try:
             self.possible_traces = self.calculate_possible_traces(self.model)
             if self.config.only_ending_traces:
                 nr_of_possible_traces = len(self.possible_traces[1])
             else:
                 nr_of_possible_traces = self.possible_traces[0]
+            if nr_of_possible_traces == 0:
+                no_traces_possible = True
+                raise Exception
             with self.thread_status_lock:
-                self.thread_status = [0, 0, False, nr_of_possible_traces, True]
+                self.sim_status = SimStatus(0, 0, False, nr_of_possible_traces, True)
             variable_values_objs = []
             variable_values = []
             variable_names = []
@@ -415,9 +436,9 @@ class Simulation:
                         break
                     elif len(self.current_event_log.traces) >= self.config.number_of_traces:
                         break
-                    self.thread_status[0] = len(self.event_logs)
-                    self.thread_status[1] = len(self.current_event_log.traces)
-                    self.thread_status[2] = False
+                    self.sim_status.nr_of_current_logs = len(self.event_logs)
+                    self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                    self.sim_status.simulation_ended = False
                 guard_strings, written_variables_names = \
                     self.get_guard_strings_and_written_variable(trace)
                 if written_variables_names:
@@ -461,12 +482,16 @@ class Simulation:
                 self.model.reset()
                 self.model.generate_initial_values(self.value_generator)
                 self.event_logs.append(self.current_event_log)
-                self.thread_status[0] = len(self.event_logs)
-                self.thread_status[1] = len(self.current_event_log.traces)
-                self.thread_status[2] = True
+                self.sim_status.nr_of_current_logs = len(self.event_logs)
+                self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                self.sim_status.simulation_ended = True
         except:
             self.exit_with_errors = True
-            self.errors = str(traceback.format_exc())
+            if no_traces_possible:
+                self.errors = "No traces possible with the current model/configuration could be found. Check if," \
+                              " for example, the minimum trace length does not exceed all traces possible in the model!"
+            else:
+                self.errors = str(traceback.format_exc())
 
     def generate_trace_without_var_writes(self, trace):
         if self.config.fixed_timestamp:
@@ -630,7 +655,7 @@ class Simulation:
                         elif variable.type == VariableTypes.DATE:
                             var_values.values.append(
                                 QDateTime.fromString(values, "yyyy-MM-ddThh:mm:ss").
-                                    toSecsSinceEpoch())
+                                toSecsSinceEpoch())
                         elif variable.type == VariableTypes.BOOL:
                             if value in ["false", "False", "FALSE"]:
                                 var_values.values.append(False)
