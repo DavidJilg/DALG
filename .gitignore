@@ -138,3 +138,5 @@ dmypy.json
 .idea/vcs.xml
 
 event_log_config.json
+event_log.xes
+src/resources/preferences.json

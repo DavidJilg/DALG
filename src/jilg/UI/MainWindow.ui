@@ -280,7 +280,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="time_delay_minimum" native="true">
+      <widget class="QWidget" name="delay_time_delay_minimum" native="true">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -356,7 +356,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="time_delay_maximum" native="true">
+      <widget class="QWidget" name="delay_time_delay_maximum" native="true">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -446,7 +446,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QLabel" name="output_dir_label_22">
+      <widget class="QLabel" name="hours_min_sec">
        <property name="geometry">
         <rect>
          <x>310</x>
@@ -467,7 +467,7 @@
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
        </property>
       </widget>
-      <widget class="QLabel" name="output_dir_label_17">
+      <widget class="QLabel" name="days">
        <property name="geometry">
         <rect>
          <x>255</x>
@@ -568,7 +568,7 @@
         <enum>Qt::Vertical</enum>
        </property>
       </widget>
-      <widget class="QWidget" name="time_delay_maximum_3" native="true">
+      <widget class="QWidget" name="lead_time_delay_maximum" native="true">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -658,7 +658,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="time_delay_minimum_3" native="true">
+      <widget class="QWidget" name="lead_time_delay_minimum" native="true">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -824,7 +824,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="time_delay_sd_3" native="true">
+      <widget class="QWidget" name="lead_time_sd" native="true">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -964,7 +964,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="include_invisible_transitions_2" native="true">
+      <widget class="QWidget" name="include_microseconds" native="true">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1354,7 +1354,7 @@
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If this option is checked the configuration that the simulation is started with will be saved in the output dirctory. Warning: The configuration will be saved as &amp;quot;{file name}_config.json&amp;quot;. The file will be replaced if it already exists.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-        <widget class="QLabel" name="output_dir_label_37">
+        <widget class="QLabel" name="include_config_label">
          <property name="geometry">
           <rect>
            <x>0</x>
@@ -1579,7 +1579,7 @@
         <enum>Qt::Vertical</enum>
        </property>
       </widget>
-      <widget class="QLabel" name="output_dir_label_31">
+      <widget class="QLabel" name="include_variables_in_origin_label">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -1728,7 +1728,7 @@
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
      </widget>
-     <widget class="QLabel" name="label_6">
+     <widget class="QLabel" name="nr_of_generated_logs_label">
       <property name="geometry">
        <rect>
         <x>360</x>
@@ -1776,7 +1776,7 @@
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
      </widget>
-     <widget class="QLabel" name="label_8">
+     <widget class="QLabel" name="nr_of_generated_traces_label">
       <property name="geometry">
        <rect>
         <x>620</x>
@@ -1865,7 +1865,7 @@
 Simulation</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_10">
+     <widget class="QLabel" name="nr_of_possible_traces_label">
       <property name="geometry">
        <rect>
         <x>650</x>
@@ -3111,7 +3111,6 @@ Model</string>
     <property name="font">
      <font>
       <pointsize>11</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
       <underline>false</underline>
       <strikeout>false</strikeout>

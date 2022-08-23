@@ -371,17 +371,18 @@ class MainGui:
         self.window.ui.line_5.setHidden(True)
         self.window.ui.line_6.setHidden(True)
         ui = self.window.ui
-        widgets = [ui.avg_trans_delay, ui.output_dir_label_17, ui.output_dir_label_22,
-                   ui.time_delay_maximum,
-                   ui.time_delay_maximum_3, ui.time_delay_minimum, ui.time_delay_minimum_3,
+        widgets = [ui.avg_trans_delay, ui.days, ui.hours_min_sec,
+                   ui.delay_time_delay_maximum,
+                   ui.lead_time_delay_maximum, ui.delay_time_delay_minimum, ui.lead_time_delay_minimum,
                    ui.time_delay_sd,
-                   ui.time_delay_sd_3, ui.inlcude_values_in_origin_event_input,
-                   ui.output_dir_label_31, ui.include_invisible_transitions]
+                   ui.lead_time_sd, ui.inlcude_values_in_origin_event_input,
+                   ui.include_variables_in_origin_label, ui.include_invisible_transitions]
+
         for widget in widgets:
             widget.move(widget.x() - 3, widget.y() + 8)
-        ui.time_delay_sd_3.move(ui.time_delay_sd_3.x(), ui.time_delay_sd_3.y() - 7)
-        ui.time_delay_minimum_3.move(ui.time_delay_minimum_3.x(), ui.time_delay_minimum_3.y() - 7)
-        ui.time_delay_maximum_3.move(ui.time_delay_maximum_3.x(), ui.time_delay_maximum_3.y() - 7)
+        ui.lead_time_sd.move(ui.lead_time_sd.x(), ui.lead_time_sd.y() - 7)
+        ui.lead_time_delay_minimum.move(ui.lead_time_delay_minimum.x(), ui.lead_time_delay_minimum.y() - 7)
+        ui.lead_time_delay_maximum.move(ui.lead_time_delay_maximum.x(), ui.lead_time_delay_maximum.y() - 7)
 
         ui.avg_trans_lead_days_input.move(ui.avg_trans_lead_days_input.x() - 3,
                                           ui.avg_trans_lead_days_input.y())
@@ -390,7 +391,7 @@ class MainGui:
         labels = self.window.findChildren(QLabel)
         for label in labels:
             label.move(label.x(), label.y() + 2)
-        ui.output_dir_label_31.move(ui.output_dir_label_31.x(), ui.output_dir_label_31.y() - 1)
+        ui.include_variables_in_origin_label.move(ui.include_variables_in_origin_label.x(), ui.include_variables_in_origin_label.y() - 1)
         ui.general_config.setFixedHeight(180)
         self.app.setStyleSheet("QGroupBox{font-size: 11pt;}"
                                "QLabel{font-size: 11pt;}"
@@ -422,9 +423,9 @@ class MainGui:
             self.window.ui.start_simulation_button.setEnabled(True)
             self.window.ui.stop_simulation_button.setEnabled(False)
             self.window.ui.progressBar.setValue(0)
-            self.window.ui.label_6.setText("0")
-            self.window.ui.label_8.setText("0")
-            self.window.ui.label_10.setText("0")
+            self.window.ui.nr_of_generated_logs_label.setText("0")
+            self.window.ui.nr_of_generated_traces_label.setText("0")
+            self.window.ui.nr_of_possible_traces_label.setText("0")
             self.window.ui.sim_status_label.setText("Not Running!")
             self.status = Status.MODEL_LOADED
             self.sim_stop = False
@@ -432,21 +433,21 @@ class MainGui:
         else:
             if update_info.sim_strategy == "random":
                 self.window.ui.progressBar.setValue(update_info.sim_percentage)
-                self.window.ui.label_6.setText(str(update_info.sim_status.nr_of_current_logs))
-                self.window.ui.label_8.setText(str(update_info.nr_of_total_traces))
+                self.window.ui.nr_of_generated_logs_label.setText(str(update_info.sim_status.nr_of_current_logs))
+                self.window.ui.nr_of_generated_traces_label.setText(str(update_info.nr_of_total_traces))
             elif update_info.sim_strategy in ["random_exploration", "all"]:
                 if not update_info.sim_status.trace_estimation_running:
                     self.window.ui.sim_status_label.setText("Trace estimation running!")
                 else:
                     self.window.ui.sim_status_label.setText("Trace generation running!")
                 self.window.ui.progressBar.setValue(update_info.sim_percentage)
-                self.window.ui.label_6.setText(str(update_info.sim_status.nr_of_current_logs))
-                self.window.ui.label_8.setText(str(update_info.nr_of_total_traces))
+                self.window.ui.nr_of_generated_logs_label.setText(str(update_info.sim_status.nr_of_current_logs))
+                self.window.ui.nr_of_generated_traces_label.setText(str(update_info.nr_of_total_traces))
                 try:
                     sim_status5 = int(update_info.sim_status.nr_of_estimated_traces)
-                    self.window.ui.label_10.setText(str(sim_status5))
+                    self.window.ui.nr_of_possible_traces_label.setText(str(sim_status5))
                 except:
-                    self.window.ui.label_10.setText("0")
+                    self.window.ui.nr_of_possible_traces_label.setText("0")
 
             if update_info.sim_status.simulation_ended:
                 self.simulation_ended(update_info)
@@ -470,9 +471,9 @@ class MainGui:
             self.window.ui.start_simulation_button.setEnabled(True)
             self.window.ui.stop_simulation_button.setEnabled(False)
             self.window.ui.progressBar.setValue(0)
-            self.window.ui.label_6.setText("0")
-            self.window.ui.label_8.setText("0")
-            self.window.ui.label_10.setText("0")
+            self.window.ui.nr_of_generated_logs_label.setText("0")
+            self.window.ui.nr_of_generated_traces_label.setText("0")
+            self.window.ui.nr_of_possible_traces_label.setText("0")
             self.status = Status.MODEL_LOADED
             self.sim_stop = False
         else:
@@ -499,14 +500,14 @@ class MainGui:
                         self.threadpool.start(worker)
                         self.window.ui.sim_status_label.setText("Not Running")
                     self.window.ui.progressBar.setValue(0)
-                    self.window.ui.label_6.setText("0")
-                    self.window.ui.label_8.setText("0")
+                    self.window.ui.nr_of_generated_logs_label.setText("0")
+                    self.window.ui.nr_of_generated_traces_label.setText("0")
 
                 else:
                     self.window.ui.progressBar.setValue(0)
-                    self.window.ui.label_6.setText("0")
-                    self.window.ui.label_8.setText("0")
-                self.window.ui.label_10.setText("0")
+                    self.window.ui.nr_of_generated_logs_label.setText("0")
+                    self.window.ui.nr_of_generated_traces_label.setText("0")
+                self.window.ui.nr_of_possible_traces_label.setText("0")
                 self.status = Status.MODEL_LOADED
                 self.window.ui.start_simulation_button.setEnabled(True)
             else:
@@ -527,9 +528,9 @@ class MainGui:
                 self.window.ui.start_simulation_button.setEnabled(True)
                 self.window.ui.stop_simulation_button.setEnabled(False)
                 self.window.ui.progressBar.setValue(0)
-                self.window.ui.label_6.setText("0")
-                self.window.ui.label_8.setText("0")
-                self.window.ui.label_10.setText("0")
+                self.window.ui.nr_of_generated_logs_label.setText("0")
+                self.window.ui.nr_of_generated_traces_label.setText("0")
+                self.window.ui.nr_of_possible_traces_label.setText("0")
                 self.status = Status.MODEL_LOADED
                 self.sim_stop = False
 
@@ -646,8 +647,8 @@ class MainGui:
             self.window.ui.stop_simulation_button.setEnabled(False)
         else:
             self.window.ui.progressBar.setValue(0)
-            self.window.ui.label_6.setText("0")
-            self.window.ui.label_8.setText("0")
+            self.window.ui.nr_of_generated_logs_label.setText("0")
+            self.window.ui.nr_of_generated_traces_label.setText("0")
             self.status = Status.MODEL_LOADED
             self.window.ui.sim_status_label.setText("Not Running")
 
@@ -1858,17 +1859,7 @@ class MainGui:
         layout.setSpacing(3)
         scroll_area.setLayout(layout)
         included_vars = []
-        # ui_file_path = os.getcwd() + "/src/resources/QtDesignerFiles/IncludedVariablesInput.ui"
         for variable in self.main.model.variables:
-            # ui_file = QFile(ui_file_path)
-            # ui_file.open(QFile.ReadOnly)
-            # loader = QUiLoader()
-            # var_widget = loader.load(ui_file, scroll_area)
-            # var_widget.setFixedHeight(var_widget.height())
-            # var_widget.setFixedWidth(var_widget.width())
-            # label = var_widget.findChild(QLabel, name="name_label")
-            # check_box = var_widget.findChild(QCheckBox, name="check_box_input")
-
             var_widget = QWidget(scroll_area)
             var_widget.setFixedHeight(24)
             var_widget.setFixedWidth(243)
