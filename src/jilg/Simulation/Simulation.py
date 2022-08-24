@@ -52,29 +52,6 @@ class SimStatus:
         print_summary_global(self, print_list_elements)
 
 
-class DiscreteVariableValue:
-    name: str
-    var_type: VariableTypes
-    values: list
-    intervals: list
-    interval_values: list
-    combined_values: list  # (type, value) or  (type, value, interval_value) type==true => value
-
-    def __init__(self, name, var_type):
-        self.name = name
-        self.var_type = var_type
-        self.values = []
-        self.intervals = []
-        self.interval_values = []
-        self.combined_values = []
-
-    def combine_values_and_intervals(self):
-        for value in self.values:
-            self.combined_values.append((self.name, False, value))
-        for interval, interval_value in zip(self.intervals, self.interval_values):
-            self.combined_values.append((self.name, True, interval, interval_value))
-
-
 class Simulation:
     model: Model
     config: SimulationConfiguration
@@ -110,10 +87,10 @@ class Simulation:
         self.used_trace_name_count = {}
         self.current_time = self.config.timestamp_anchor
         t = self.current_time
-        sgtTimeDelta = datetime.timedelta(hours=self.config.utc_offset)
-        sgtTZObject = datetime.timezone(sgtTimeDelta, name="SGT")
+        sgt_time_delta = datetime.timedelta(hours=self.config.utc_offset)
+        sgt_tz_object = datetime.timezone(sgt_time_delta, name="SGT")
         self.current_time = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second, 0,
-                                              sgtTZObject)
+                                              sgt_tz_object)
         np.random.seed(int(self.rng.uniform(0, 1000)))
         self.thread_status_lock = threading.Lock()
         self.value_generator = ValueGenerator(model, self.rng)
@@ -126,10 +103,10 @@ class Simulation:
         self.used_trace_name_count = {}
         self.current_time = self.config.timestamp_anchor
         t = self.current_time
-        sgtTimeDelta = datetime.timedelta(hours=self.config.utc_offset)
-        sgtTZObject = datetime.timezone(sgtTimeDelta, name="SGT")
+        sgt_time_delta = datetime.timedelta(hours=self.config.utc_offset)
+        sgt_tz_object = datetime.timezone(sgt_time_delta, name="SGT")
         self.current_time = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second, 0,
-                                              sgtTZObject)
+                                              sgt_tz_object)
         for trace_name in self.unused_trace_names:
             self.used_trace_name_count[trace_name] = 0
         self.model.reset()
@@ -250,8 +227,7 @@ class Simulation:
                                                                             model_copy,
                                                                             trace_copy,
                                                                             markings_copy,
-                                                                            all_seen_traces_markings
-                                                                            ,
+                                                                            all_seen_traces_markings,
                                                                             no_invisible_trace_copy)
 
     def run_random_trace_generation(self):
@@ -313,17 +289,6 @@ class Simulation:
         except:
             self.exit_with_errors = True
             self.errors = str(traceback.format_exc())
-
-    def get_trace_length(self, trace):
-        length = 0
-        for event in trace.events:
-            invis = self.model.get_place_or_transition_by_id(event.trans_id).invisible
-            if invis:
-                if self.config.include_invisible_transitions_in_log:
-                    length += 1
-            else:
-                length += 1
-        return length
 
     def run_random_exploration(self):
         self.current_event_log = EventLog(self.event_log_name,
@@ -391,206 +356,14 @@ class Simulation:
             else:
                 self.errors = str(traceback.format_exc())
 
-    def run_full_exploration(self):
-        self.current_event_log = EventLog(self.event_log_name,
-                                          self.event_log_creator)
-        no_traces_possible = False
-        try:
-            self.possible_traces = self.calculate_possible_traces(self.model)
-            if self.config.only_ending_traces:
-                nr_of_possible_traces = len(self.possible_traces[1])
-            else:
-                nr_of_possible_traces = self.possible_traces[0]
-            if nr_of_possible_traces == 0:
-                no_traces_possible = True
-                raise Exception
-            with self.thread_status_lock:
-                self.sim_status = SimStatus(0, 0, False, nr_of_possible_traces, True)
-            variable_values_objs = []
-            variable_values = []
-            variable_names = []
-            analyser = ModelAnalyser()
-            interval_dict = analyser.determine_intervals(self.model, None, None, True)
-            for variable in self.model.variables:
-                variable_values_objs.append(
-                    self.determine_discrete_variable_values(variable, interval_dict))
-                variable_values_objs[-1].combine_values_and_intervals()
-                variable_values.append(variable_values_objs[-1].combined_values)
-                variable_names.append(variable.name)
-            combinations = list(itertools.product(*variable_values))
-            valid_traces = self.possible_traces[1]
-            other_traces = self.possible_traces[2]
-            variables = self.get_variables()
-            milp_solver = MilpSolver()
-            traces = valid_traces
-            if not self.config.only_ending_traces:
-                for trace in other_traces:
-                    traces.append(trace)
-
-            break_var = False
-            for trace in traces:
-                if break_var:
-                    break
-                with self.thread_status_lock:
-                    if self.thread_stop:
-                        break
-                    elif len(self.current_event_log.traces) >= self.config.number_of_traces:
-                        break
-                    self.sim_status.nr_of_current_logs = len(self.event_logs)
-                    self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
-                    self.sim_status.simulation_ended = False
-                guard_strings, written_variables_names = \
-                    self.get_guard_strings_and_written_variable(trace)
-                if written_variables_names:
-                    written_variables = []
-                    for variable in variables:
-                        if variable.name in written_variables_names:
-                            written_variables.append(variable)
-                    for combination in combinations:
-                        with self.thread_status_lock:
-                            if self.thread_stop:
-                                break_var = True
-                                break
-                        success, generated_trace = self.try_combination(trace, combination,
-                                                                        guard_strings,
-                                                                        written_variables,
-                                                                        variables, milp_solver)
-                        if success:
-                            self.current_event_log.traces.append(generated_trace)
-                            partial_traces = self.determine_partial_traces(generated_trace)
-                            if partial_traces:
-                                for partial_trace in partial_traces:
-                                    if self.count_duplicates(
-                                            partial_trace) <= self.config.max_trace_duplicates:
-                                        if len(self.current_event_log.traces) < \
-                                                self.config.number_of_traces:
-                                            self.current_event_log.traces.append(partial_trace)
-                            break
-                else:
-                    for variable in self.model.variables:
-                        variable.reset()
-                    success = True
-                    for guard in guard_strings:
-                        if not milp_solver.compile_and_evaluate_string(guard, variables):
-                            success = False
-                            break
-                    if success:
-                        self.current_event_log.traces.append(
-                            self.generate_trace_without_var_writes(trace)
-                        )
-            with self.thread_status_lock:
-                self.model.reset()
-                self.model.generate_initial_values(self.value_generator)
-                self.event_logs.append(self.current_event_log)
-                self.sim_status.nr_of_current_logs = len(self.event_logs)
-                self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
-                self.sim_status.simulation_ended = True
-        except:
-            self.exit_with_errors = True
-            if no_traces_possible:
-                self.errors = "No traces possible with the current model/configuration could be found. Check if," \
-                              " for example, the minimum trace length does not exceed all traces possible in the model!"
-            else:
-                self.errors = str(traceback.format_exc())
-
-    def generate_trace_without_var_writes(self, trace):
-        if self.config.fixed_timestamp:
-            self.current_time = self.config.timestamp_anchor
-        transitions = []
-        for trans_id in trace:
-            transitions.append(self.model.get_place_or_transition_by_id(trans_id))
-        for variable in self.model.variables:
-            variable.reset()
-        generated_trace = Trace(self.generate_trace_name())
-        previous_transition = None
-        for index, transition in enumerate(transitions):
-            try:
-                self.current_time += self.forward_time(transition, previous_transition)
-            except OverflowError:
-                self.current_time = datetime.datetime.max
-                event = Event(transition.config.activity_name, self.current_time, self.model,
-                              transition.id, self.config.timestamp_millieseconds,
-                              transition.invisible)
-                generated_trace.events.append(event)
-        return generated_trace
-
-    def try_combination(self, trace, combination, guards, written_variables, variables,
-                        milp_solver):
-        for variable in variables:
-            variable.reset()
-        for variable in written_variables:
-            variable.value = self.get_value_from_combination(combination, variable.name)
-            variable.has_current_value = True
-            variable.has_been_written_to = True
-        success = True
-        for guard in guards:
-            if not milp_solver.compile_and_evaluate_string(guard, variables):
-                success = False
-                break
-        if success:
-            return True, self.generate_trace_with_var_combination(trace, combination)
+    def no_traces_generated(self):
+        traces = 0
+        for event_log in self.event_logs:
+            traces += len(event_log.traces)
+        if traces == 0:
+            return True
         else:
-            return False, None
-
-    def generate_trace_with_var_combination(self, trace, combination):
-        value_gen = ValueGenerator(self.model, self.rng)
-        if self.config.fixed_timestamp:
-            self.current_time = self.config.timestamp_anchor
-        transitions = []
-        writes_variable_names = []
-        for trans_id in trace:
-            transitions.append(self.model.get_place_or_transition_by_id(trans_id))
-            for var in transitions[-1].writes_variables:
-                writes_variable_names.append(var.name)
-
-        for variable in self.model.variables:
-            variable.reset()
-        generated_trace = Trace(self.generate_trace_name())
-        previous_transition = None
-        for index, transition in enumerate(transitions):
-            try:
-                self.current_time += self.forward_time(transition, previous_transition)
-            except OverflowError:
-                self.current_time = datetime.datetime.max
-
-            if self.config.values_in_origin_event:
-                self.generate_value(transition, combination, value_gen)
-                event = Event(transition.config.activity_name, self.current_time, self.model,
-                              transition.id, self.config.timestamp_millieseconds,
-                              transition.invisible)
-                generated_trace.events.append(event)
-
-            else:
-                event = Event(transition.config.activity_name, self.current_time, self.model,
-                              transition.id, self.config.timestamp_millieseconds,
-                              transition.invisible)
-                generated_trace.events.append(event)
-                self.generate_value(transition, combination, value_gen)
-
-            previous_transition = transition
-        return generated_trace
-
-    def generate_value(self, transition, combination, value_gen):
-        writes_variables = transition.writes_variables
-        for variable in writes_variables:
-            combi_value = self.get_discrete_variable_value_by_name(combination,
-                                                                   variable.name)
-            if combi_value[1]:
-                variable.value = self.generate_discrete_variable_interval_value(
-                    combi_value[2], variable, value_gen)
-            else:
-                variable.value = combi_value[2]
-            variable.has_been_written_to = True
-            variable.has_current_value = True
-
-    def get_value_from_combination(self, combination, var_name):
-        for var_value in combination:
-            if var_value[0] == var_name:
-                if var_value[1]:
-                    return var_value[3]
-                else:
-                    return var_value[2]
-        return None
+            return False
 
     def get_variables(self):
         variables = []
@@ -600,212 +373,11 @@ class Simulation:
 
         return variables
 
-    def get_guard_strings_and_written_variable(self, trace):
-        guard_strings = []
-        written_variables = []
-        for trans_id in trace:
-            trans = self.model.get_place_or_transition_by_id(trans_id)
-            written_variables += trans.get_writes_variables_names()
-            if trans.guard is not None:
-                guard_strings.append(trans.guard.guard_string)
-        return guard_strings, written_variables
-
     def get_discrete_variable_value_by_name(self, combinations, name):
         for combination in combinations:
             if combination[0] == name:
                 return combination
         return None
-
-    def determine_discrete_variable_values(self, variable, interval_dict):
-        value_gen = ValueGenerator(self.model, self.rng)
-        if variable.type == VariableTypes.DOUBLE:
-            offset = 0.0000000000000001
-        else:
-            offset = 1
-        var_values = DiscreteVariableValue(variable.name, variable.type)
-        analyser = ModelAnalyser()
-        var_names = []
-        self.config.use_only_values_from_guard_strings = False
-        if variable.semantic_information.used_information == 0 and \
-                not self.config.use_only_values_from_guard_strings:
-            var_values.values = variable.semantic_information.values[0]
-        elif variable.semantic_information.used_information == 1 and \
-                not self.config.use_only_values_from_guard_strings:
-            var_values.intervals = variable.semantic_information.intervals
-        else:
-            if variable.name in interval_dict.keys():
-                var_values.intervals += interval_dict[variable.name]
-                var_values.intervals = list(dict.fromkeys(var_values.intervals))
-
-        for var in self.model.variables:
-            if var.name != variable.name:
-                var_names.append(var.name)
-        for trans in self.model.transitions:
-            if trans.guard is not None:
-                guard_string = trans.guard.guard_string
-                for other_variable_name in var_names:
-                    guard_string.replace(other_variable_name, "")
-                values, values_found = analyser.check_for_values(guard_string, variable.name)
-                if values_found:
-                    for value in values:
-                        if variable.type in [VariableTypes.LONG, VariableTypes.INT]:
-                            var_values.values.append(int(value))
-                        elif variable.type == VariableTypes.DOUBLE:
-                            var_values.values.append(float(value))
-                        elif variable.type == VariableTypes.DATE:
-                            var_values.values.append(
-                                QDateTime.fromString(values, "yyyy-MM-ddThh:mm:ss").
-                                toSecsSinceEpoch())
-                        elif variable.type == VariableTypes.BOOL:
-                            if value in ["false", "False", "FALSE"]:
-                                var_values.values.append(False)
-                            else:
-                                var_values.values.append(True)
-                        else:
-                            var_values.values.append(value)
-
-        var_values.values = list(dict.fromkeys(var_values.values))
-        if self.config.merge_intervals:
-            var_values.intervals = self.check_for_interval_merging(var_values.intervals,
-                                                                   offset)
-        for interval in var_values.intervals:
-            var_values.interval_values.append(
-                self.generate_discrete_variable_interval_value(interval,
-                                                               variable,
-                                                               value_gen))
-        return var_values
-
-    def check_for_interval_merging(self, intervals, offset):
-        if len(intervals) < 2:
-            return intervals
-        while True:
-            stop = True
-            for pair in itertools.product(intervals, repeat=2):
-                if pair[0] != pair[1]:
-                    success, merged_interval = self.can_merge(pair[0], pair[1], offset)
-                    if success:
-                        intervals.append(merged_interval)
-                        intervals.remove(pair[0])
-                        intervals.remove(pair[1])
-                        stop = False
-                        if len(intervals) < 2:
-                            stop = True
-                        break
-            if stop:
-                break
-        return intervals
-
-    def can_merge(selv, interval1, interval2, offset):
-        op1 = interval1[0]
-        op2 = interval2[0]
-        v1 = interval1[1]
-        v2 = interval2[1]
-        if ["<>"] in [op1, op2]:
-            return False, None
-
-        elif op1 in ["<=", "<"] and op2 in ["<", "<="]:
-            if op1 == "<=" and op2 == "<=":
-                return True, ("<=", min(v2, v1))
-            elif op1 == "<" and op2 == "<":
-                return True, ("<", min(v2, v1))
-            elif op1 == "<" and op2 == "<=":
-                if v1 == v2:
-                    return True, ("<", v1 - offset)
-                elif v1 < v2:
-                    return True, ("<", v1)
-                else:
-                    return True, ("<=", v2)
-            elif op1 == "<=" and op2 == "<":
-                if v1 == v2:
-                    return True, ("<", v1 - offset)
-                elif v2 < v1:
-                    return True, ("<", v2)
-                else:
-                    return True, ("<=", v1)
-
-        elif op1 in [">=", ">"] and op2 in [">", ">="]:
-            if op1 == ">=" and op2 == ">=":
-                return True, (">=", max(v2, v1))
-            elif op1 == ">" and op2 == ">":
-                return True, (">", max(v2, v1))
-            elif op1 == ">" and op2 == ">=":
-                if v1 == v2:
-                    return True, (">", v1 + offset)
-                elif v1 > v2:
-                    return True, (">", v1)
-                else:
-                    return True, (">=", v2)
-            elif op1 == ">=" and op2 == ">":
-                if v1 == v2:
-                    return True, (">", v1 + offset)
-                elif v2 > v1:
-                    return True, (">", v2)
-                else:
-                    return True, (">=", v1)
-
-        elif op1 == "<" and op2 == ">":
-            if v1 - offset > v2 + offset:
-                return True, ("<>", v2 + offset, v1 - offset)
-            else:
-                return False, None
-
-        elif op1 == "<" and op2 == ">=":
-            if v1 - offset > v2:
-                return True, ("<>", v2, v1 - offset)
-            else:
-                return False, None
-
-        elif op1 == "<=" and op2 == ">":
-            if v1 > v2 + offset:
-                return True, ("<>", v1, v2 + offset)
-            else:
-                return None
-
-        elif op1 == "<=" and op2 == ">=":
-            if v1 > v2:
-                return True, ("<>", v2, v1)
-            else:
-                return False, None
-
-        elif op1 == ">" and op2 == "<":
-            if v1 - offset < v2 + offset:
-                return True, ("<>", v1 + offset, v2 - offset)
-            else:
-                return False, None
-
-        elif op1 == ">" and op2 == "<=":
-            if v2 > v1 + offset:
-                return True, ("<>", v1 + offset, v2)
-            else:
-                return None
-
-        elif op1 == ">=" and op2 == "<":
-            if v1 < v2 - offset:
-                return True, ("<>", v1, v2 - offset)
-            else:
-                return False, None
-
-        elif op1 == ">=" and op2 == "<=":
-            if v1 < v2:
-                return True, ("<>", v1, v2)
-            else:
-                return False, None
-        else:
-            return False, None
-
-    def generate_discrete_variable_interval_value(self, interval, variable, value_gen):
-        if interval[0] == "<>":
-            interval = [interval[1], interval[2]]
-        else:
-            interval, in_bounds = value_gen.get_merged_constraint_interval([interval], variable)
-        if variable.type == VariableTypes.DOUBLE:
-            if interval[0] == interval[1]:
-                return interval[0]
-            return self.rng.uniform(interval[0], interval[1])
-        else:
-            if interval[0] == interval[1]:
-                return interval[0]
-            return int(self.rng.uniform(interval[0], interval[1]))
 
     def determine_partial_traces(self, trace):
         partial_traces = []
@@ -1034,11 +606,11 @@ class Simulation:
         return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
 
     def fire_transition(self):
-        enabled_transitions, propabilities = self.model.get_enabled_transitions(True, True)
+        enabled_transitions, probabilities = self.model.get_enabled_transitions(True, True)
         if len(enabled_transitions) == 0:
             return None
         else:
-            chosen_transition = self.rng.choice(enabled_transitions, 1, False, propabilities)[0]
+            chosen_transition = self.rng.choice(enabled_transitions, 1, False, probabilities)[0]
             self.model.fire_transition(chosen_transition.id, True)
             return chosen_transition
 
@@ -1122,47 +694,392 @@ class Simulation:
                 event_count += 1
         return event_count
 
+# --------------------------------------- All Traces experimental model ------------------------------------------------
+    def run_full_exploration(self):
+        self.current_event_log = EventLog(self.event_log_name,
+                                          self.event_log_creator)
+        no_traces_possible = False
+        no_traces_found = False
+        try:
+            self.possible_traces = self.calculate_possible_traces(self.model)
+            if self.config.only_ending_traces:
+                nr_of_possible_traces = len(self.possible_traces[1])
+            else:
+                nr_of_possible_traces = self.possible_traces[0]
+            if nr_of_possible_traces == 0:
+                no_traces_possible = True
+                raise Exception
+            with self.thread_status_lock:
+                self.sim_status = SimStatus(0, 0, False, nr_of_possible_traces, True)
+            variable_values_objs = []
+            variable_values = []
+            variable_names = []
+            analyser = ModelAnalyser()
+            interval_dict = analyser.determine_intervals(self.model, None, None, True)
+            for variable in self.model.variables:
+                variable_values_objs.append(
+                    self.determine_discrete_variable_values(variable, interval_dict))
+                variable_values_objs[-1].combine_values_and_intervals()
+                variable_values.append(variable_values_objs[-1].combined_values)
+                variable_names.append(variable.name)
+            combinations = list(itertools.product(*variable_values))
+            valid_traces = self.possible_traces[1]
+            other_traces = self.possible_traces[2]
+            variables = self.get_variables()
+            milp_solver = MilpSolver()
+            traces = valid_traces
+            if not self.config.only_ending_traces:
+                for trace in other_traces:
+                    traces.append(trace)
 
-if __name__ == "__main__":
-    def can_merge(interval1, interval2, offset):
+            break_var = False
+            for trace in traces:
+                if break_var:
+                    break
+                with self.thread_status_lock:
+                    if self.thread_stop:
+                        break
+                    elif len(self.current_event_log.traces) >= self.config.number_of_traces:
+                        break
+                    self.sim_status.nr_of_current_logs = len(self.event_logs)
+                    self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                    self.sim_status.simulation_ended = False
+                guard_strings, written_variables_names = \
+                    self.get_guard_strings_and_written_variable(trace)
+                if written_variables_names:
+                    written_variables = []
+                    for variable in variables:
+                        if variable.name in written_variables_names:
+                            written_variables.append(variable)
+                    for combination in combinations:
+                        with self.thread_status_lock:
+                            if self.thread_stop:
+                                break_var = True
+                                break
+                        success, generated_trace = self.try_combination(trace, combination,
+                                                                        guard_strings,
+                                                                        written_variables,
+                                                                        variables, milp_solver)
+                        if success:
+                            self.current_event_log.traces.append(generated_trace)
+                            partial_traces = self.determine_partial_traces(generated_trace)
+                            if partial_traces:
+                                for partial_trace in partial_traces:
+                                    if self.count_duplicates(
+                                            partial_trace) <= self.config.max_trace_duplicates:
+                                        if len(self.current_event_log.traces) < \
+                                                self.config.number_of_traces:
+                                            self.current_event_log.traces.append(partial_trace)
+                            break
+                else:
+                    for variable in self.model.variables:
+                        variable.reset()
+                    success = True
+                    for guard in guard_strings:
+                        if not milp_solver.compile_and_evaluate_string(guard, variables):
+                            success = False
+                            break
+                    if success:
+                        self.current_event_log.traces.append(
+                            self.generate_trace_without_var_writes(trace)
+                        )
+            with self.thread_status_lock:
+                self.model.reset()
+                self.model.generate_initial_values(self.value_generator)
+                self.event_logs.append(self.current_event_log)
+                self.sim_status.nr_of_current_logs = len(self.event_logs)
+                self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
+                self.sim_status.simulation_ended = True
+            if self.no_traces_generated():
+                no_traces_found = True
+                raise Exception
+        except:
+            self.exit_with_errors = True
+            if no_traces_possible:
+                self.errors = "No traces possible with the current model/configuration could be found. Check if," \
+                              " for example, the minimum trace length does not exceed all traces possible in the model!"
+            elif no_traces_found:
+                self.errors = "The experimental 'All Traces' mode could not find any valid traces!"
+            else:
+                self.errors = str(traceback.format_exc())
+
+    def determine_discrete_variable_values(self, variable, interval_dict):
+        value_gen = ValueGenerator(self.model, self.rng)
+        if variable.type == VariableTypes.DOUBLE:
+            offset = 0.0000000000000001
+        else:
+            offset = 1
+        var_values = DiscreteVariableValue(variable.name, variable.type)
+        analyser = ModelAnalyser()
+        var_names = []
+        self.config.use_only_values_from_guard_strings = False
+        if variable.semantic_information.used_information == 0 and \
+                not self.config.use_only_values_from_guard_strings:
+            var_values.values = variable.semantic_information.values[0]
+        elif variable.semantic_information.used_information == 1 and \
+                not self.config.use_only_values_from_guard_strings:
+            var_values.intervals = variable.semantic_information.intervals
+        else:
+            if variable.name in interval_dict.keys():
+                var_values.intervals += interval_dict[variable.name]
+                var_values.intervals = list(dict.fromkeys(var_values.intervals))
+
+        for var in self.model.variables:
+            if var.name != variable.name:
+                var_names.append(var.name)
+        for trans in self.model.transitions:
+            if trans.guard is not None:
+                guard_string = trans.guard.guard_string
+                for other_variable_name in var_names:
+                    guard_string.replace(other_variable_name, "")
+                values, values_found = analyser.check_for_values(guard_string, variable.name)
+                if values_found:
+                    for value in values:
+                        if variable.type in [VariableTypes.LONG, VariableTypes.INT]:
+                            var_values.values.append(int(value))
+                        elif variable.type == VariableTypes.DOUBLE:
+                            var_values.values.append(float(value))
+                        elif variable.type == VariableTypes.DATE:
+                            var_values.values.append(
+                                QDateTime.fromString(values, "yyyy-MM-ddThh:mm:ss").
+                                toSecsSinceEpoch())
+                        elif variable.type == VariableTypes.BOOL:
+                            if value in ["false", "False", "FALSE"]:
+                                var_values.values.append(False)
+                            else:
+                                var_values.values.append(True)
+                        else:
+                            var_values.values.append(value)
+
+        var_values.values = list(dict.fromkeys(var_values.values))
+        if self.config.merge_intervals:
+            var_values.intervals = self.check_for_interval_merging(var_values.intervals,
+                                                                   offset)
+        for interval in var_values.intervals:
+            var_values.interval_values.append(
+                self.generate_discrete_variable_interval_value(interval,
+                                                               variable,
+                                                               value_gen))
+        return var_values
+
+    def get_guard_strings_and_written_variable(self, trace):
+        guard_strings = []
+        written_variables = []
+        for trans_id in trace:
+            trans = self.model.get_place_or_transition_by_id(trans_id)
+            written_variables += trans.get_writes_variables_names()
+            if trans.guard is not None:
+                guard_strings.append(trans.guard.guard_string)
+        return guard_strings, written_variables
+
+    def try_combination(self, trace, combination, guards, written_variables, variables,
+                        milp_solver):
+        for variable in variables:
+            variable.reset()
+        for variable in written_variables:
+            variable.value = self.get_value_from_combination(combination, variable.name)
+            variable.has_current_value = True
+            variable.has_been_written_to = True
+        success = True
+        for guard in guards:
+            if not milp_solver.compile_and_evaluate_string(guard, variables):
+                success = False
+                break
+        if success:
+            return True, self.generate_trace_with_var_combination(trace, combination)
+        else:
+            return False, None
+
+    def generate_trace_without_var_writes(self, trace):
+        if self.config.fixed_timestamp:
+            self.current_time = self.config.timestamp_anchor
+        transitions = []
+        for trans_id in trace:
+            transitions.append(self.model.get_place_or_transition_by_id(trans_id))
+        for variable in self.model.variables:
+            variable.reset()
+        generated_trace = Trace(self.generate_trace_name())
+        previous_transition = None
+        for index, transition in enumerate(transitions):
+            try:
+                self.current_time += self.forward_time(transition, previous_transition)
+            except OverflowError:
+                self.current_time = datetime.datetime.max
+                event = Event(transition.config.activity_name, self.current_time, self.model,
+                              transition.id, self.config.timestamp_millieseconds,
+                              transition.invisible)
+                generated_trace.events.append(event)
+        return generated_trace
+
+    def check_for_interval_merging(self, intervals, offset):
+        if len(intervals) < 2:
+            return intervals
+        while True:
+            stop = True
+            for pair in itertools.product(intervals, repeat=2):
+                if pair[0] != pair[1]:
+                    success, merged_interval = self.can_merge(pair[0], pair[1], offset)
+                    if success:
+                        intervals.append(merged_interval)
+                        intervals.remove(pair[0])
+                        intervals.remove(pair[1])
+                        stop = False
+                        if len(intervals) < 2:
+                            stop = True
+                        break
+            if stop:
+                break
+        return intervals
+
+    def generate_discrete_variable_interval_value(self, interval, variable, value_gen):
+        if interval[0] == "<>":
+            interval = [interval[1], interval[2]]
+        else:
+            interval, in_bounds = value_gen.get_merged_constraint_interval([interval], variable)
+        if variable.type == VariableTypes.DOUBLE:
+            if interval[0] == interval[1]:
+                return interval[0]
+            return self.rng.uniform(interval[0], interval[1])
+        else:
+            if interval[0] == interval[1]:
+                return interval[0]
+            return int(self.rng.uniform(interval[0], interval[1]))
+
+    def get_value_from_combination(self, combination, var_name):
+        for var_value in combination:
+            if var_value[0] == var_name:
+                if var_value[1]:
+                    return var_value[3]
+                else:
+                    return var_value[2]
+        return None
+
+    def generate_trace_with_var_combination(self, trace, combination):
+        value_gen = ValueGenerator(self.model, self.rng)
+        if self.config.fixed_timestamp:
+            self.current_time = self.config.timestamp_anchor
+        transitions = []
+        writes_variable_names = []
+        for trans_id in trace:
+            transitions.append(self.model.get_place_or_transition_by_id(trans_id))
+            for var in transitions[-1].writes_variables:
+                writes_variable_names.append(var.name)
+
+        for variable in self.model.variables:
+            variable.reset()
+        generated_trace = Trace(self.generate_trace_name())
+        previous_transition = None
+        for index, transition in enumerate(transitions):
+            try:
+                self.current_time += self.forward_time(transition, previous_transition)
+            except OverflowError:
+                self.current_time = datetime.datetime.max
+
+            if self.config.values_in_origin_event:
+                self.generate_value(transition, combination, value_gen)
+                event = Event(transition.config.activity_name, self.current_time, self.model,
+                              transition.id, self.config.timestamp_millieseconds,
+                              transition.invisible)
+                generated_trace.events.append(event)
+
+            else:
+                event = Event(transition.config.activity_name, self.current_time, self.model,
+                              transition.id, self.config.timestamp_millieseconds,
+                              transition.invisible)
+                generated_trace.events.append(event)
+                self.generate_value(transition, combination, value_gen)
+
+            previous_transition = transition
+        return generated_trace
+
+    def generate_value(self, transition, combination, value_gen):
+        writes_variables = transition.writes_variables
+        for variable in writes_variables:
+            combi_value = self.get_discrete_variable_value_by_name(combination,
+                                                                   variable.name)
+            if combi_value[1]:
+                variable.value = self.generate_discrete_variable_interval_value(
+                    combi_value[2], variable, value_gen)
+            else:
+                variable.value = combi_value[2]
+            variable.has_been_written_to = True
+            variable.has_current_value = True
+
+    def can_merge(self, interval1, interval2, offset):
         op1 = interval1[0]
         op2 = interval2[0]
         v1 = interval1[1]
         v2 = interval2[1]
+        if ["<>"] in [op1, op2]:
+            return False, None
 
-        if op1 in ["<=", "<"] and op2 in ["<", "<="]:
-            return True, ("<", min(v2, v1) - offset)
+        elif op1 in ["<=", "<"] and op2 in ["<", "<="]:
+            if op1 == "<=" and op2 == "<=":
+                return True, ("<=", min(v2, v1))
+            elif op1 == "<" and op2 == "<":
+                return True, ("<", min(v2, v1))
+            elif op1 == "<" and op2 == "<=":
+                if v1 == v2:
+                    return True, ("<", v1 - offset)
+                elif v1 < v2:
+                    return True, ("<", v1)
+                else:
+                    return True, ("<=", v2)
+            elif op1 == "<=" and op2 == "<":
+                if v1 == v2:
+                    return True, ("<", v1 - offset)
+                elif v2 < v1:
+                    return True, ("<", v2)
+                else:
+                    return True, ("<=", v1)
 
         elif op1 in [">=", ">"] and op2 in [">", ">="]:
-            return True, (">", min(v2, v1) + offset)
+            if op1 == ">=" and op2 == ">=":
+                return True, (">=", max(v2, v1))
+            elif op1 == ">" and op2 == ">":
+                return True, (">", max(v2, v1))
+            elif op1 == ">" and op2 == ">=":
+                if v1 == v2:
+                    return True, (">", v1 + offset)
+                elif v1 > v2:
+                    return True, (">", v1)
+                else:
+                    return True, (">=", v2)
+            elif op1 == ">=" and op2 == ">":
+                if v1 == v2:
+                    return True, (">", v1 + offset)
+                elif v2 > v1:
+                    return True, (">", v2)
+                else:
+                    return True, (">=", v1)
 
         elif op1 == "<" and op2 == ">":
             if v1 - offset > v2 + offset:
-                return True, ("<>", v1 - offset, v2 + offset)
+                return True, ("<>", v2 + offset, v1 - offset)
             else:
                 return False, None
 
         elif op1 == "<" and op2 == ">=":
             if v1 - offset > v2:
-                return True, ("<>", v1 - offset, v2)
+                return True, ("<>", v2, v1 - offset)
             else:
                 return False, None
 
         elif op1 == "<=" and op2 == ">":
             if v1 > v2 + offset:
-                return True, ("<>", v2 + offset, v1)
+                return True, ("<>", v1, v2 + offset)
             else:
                 return None
 
         elif op1 == "<=" and op2 == ">=":
             if v1 > v2:
-                return True, ("<>", v1, v2)
+                return True, ("<>", v2, v1)
             else:
                 return False, None
 
         elif op1 == ">" and op2 == "<":
             if v1 - offset < v2 + offset:
-                return True, ("<>", v2 - offset, v1 + offset)
+                return True, ("<>", v1 + offset, v2 - offset)
             else:
                 return False, None
 
@@ -1174,12 +1091,37 @@ if __name__ == "__main__":
 
         elif op1 == ">=" and op2 == "<":
             if v1 < v2 - offset:
-                return True, ("<>", v2 - offset, v1)
+                return True, ("<>", v1, v2 - offset)
             else:
                 return False, None
 
         elif op1 == ">=" and op2 == "<=":
             if v1 < v2:
-                return True, ("<>", v2, v1)
+                return True, ("<>", v1, v2)
             else:
                 return False, None
+        else:
+            return False, None
+
+
+class DiscreteVariableValue:
+    name: str
+    var_type: VariableTypes
+    values: list
+    intervals: list
+    interval_values: list
+    combined_values: list  # (type, value) or  (type, value, interval_value) type==true => value
+
+    def __init__(self, name, var_type):
+        self.name = name
+        self.var_type = var_type
+        self.values = []
+        self.intervals = []
+        self.interval_values = []
+        self.combined_values = []
+
+    def combine_values_and_intervals(self):
+        for value in self.values:
+            self.combined_values.append((self.name, False, value))
+        for interval, interval_value in zip(self.intervals, self.interval_values):
+            self.combined_values.append((self.name, True, interval, interval_value))

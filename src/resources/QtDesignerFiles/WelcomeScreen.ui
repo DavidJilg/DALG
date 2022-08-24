@@ -91,7 +91,7 @@
     <string>Open Manual</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QLabel" name="label_welcome_screen_title">
    <property name="geometry">
     <rect>
      <x>40</x>

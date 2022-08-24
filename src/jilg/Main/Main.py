@@ -168,30 +168,3 @@ class Main:
                                                  self.config.simulation_config
                                                  .include_invisible_transitions_in_log,
                                                  self.config.include_metadata)
-
-
-if __name__ == "__main__":
-    main = Main()
-    main.model_path = Global.test_files_path + "DataPetriNet_v1.0.pnml"
-    main.initialize_model_and_config("C:/Users/david/Downloads/Neuer Ordner (4)/")
-    trans_names = []
-    for trans in main.model.transitions:
-        trans_names.append(trans.name)
-
-    tmp = []
-    for trans in main.model.transitions:
-        if trans_names.count(trans.name) > 1:
-            tmp.append((trans.name, trans.id))
-
-    # for x in sorted(tmp):
-    #     print(x[0], x[1])
-
-    # print(".......................................................")
-    for transition in main.model.transitions:
-        if transition.guard is not None:
-            print(transition.guard.guard_string)
-
-    for variable in main.model.variables:
-        print(variable.type)
-
-

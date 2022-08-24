@@ -4,9 +4,6 @@ import unittest
 from src.jilg.Model.Variable import Variable, VariableTypes
 from src.jilg.Model.MilpSolver import MilpSolver
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class TestMilpSolver(TestCase):
     lc: MilpSolver

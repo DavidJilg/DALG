@@ -26,10 +26,10 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="label_trans_config">
     <property name="geometry">
      <rect>
-      <x>1020</x>
+      <x>1015</x>
       <y>145</y>
       <width>191</width>
       <height>31</height>
@@ -56,6 +56,12 @@
       <height>561</height>
      </rect>
     </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
     <property name="verticalScrollBarPolicy">
      <enum>Qt::ScrollBarAlwaysOn</enum>
     </property>
@@ -70,8 +76,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>431</width>
-       <height>559</height>
+       <width>429</width>
+       <height>557</height>
       </rect>
      </property>
      <widget class="QGroupBox" name="general_config_2">
@@ -486,86 +492,6 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-      </widget>
-      <widget class="Line" name="line_3">
-       <property name="geometry">
-        <rect>
-         <x>165</x>
-         <y>10</y>
-         <width>245</width>
-         <height>1</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_4">
-       <property name="geometry">
-        <rect>
-         <x>-1</x>
-         <y>10</y>
-         <width>3</width>
-         <height>641</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_6">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>10</y>
-         <width>9</width>
-         <height>1</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_2">
-       <property name="geometry">
-        <rect>
-         <x>-1</x>
-         <y>635</y>
-         <width>412</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_5">
-       <property name="geometry">
-        <rect>
-         <x>409</x>
-         <y>10</y>
-         <width>3</width>
-         <height>641</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
        </property>
       </widget>
       <widget class="QWidget" name="lead_time_delay_maximum" native="true">
@@ -1134,7 +1060,7 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="label_general_config">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -1155,10 +1081,10 @@
      <string>General Configuration</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
+   <widget class="QLabel" name="label_sim_config">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>110</x>
       <y>323</y>
       <width>201</width>
       <height>31</height>
@@ -1178,12 +1104,15 @@
      <rect>
       <x>20</x>
       <y>138</y>
-      <width>361</width>
+      <width>371</width>
       <height>181</height>
      </rect>
     </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
     <property name="frameShadow">
-     <enum>QFrame::Sunken</enum>
+     <enum>QFrame::Raised</enum>
     </property>
     <property name="lineWidth">
      <number>1</number>
@@ -1196,8 +1125,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>359</width>
-       <height>179</height>
+       <width>367</width>
+       <height>177</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1443,17 +1372,17 @@
    <widget class="QScrollArea" name="variable_config">
     <property name="geometry">
      <rect>
-      <x>408</x>
+      <x>415</x>
       <y>174</y>
       <width>450</width>
       <height>561</height>
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Box</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Sunken</enum>
+     <enum>QFrame::Raised</enum>
     </property>
     <property name="verticalScrollBarPolicy">
      <enum>Qt::ScrollBarAlwaysOn</enum>
@@ -1469,8 +1398,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>431</width>
-       <height>559</height>
+       <width>429</width>
+       <height>557</height>
       </rect>
      </property>
      <widget class="QGroupBox" name="general_config_3">
@@ -1499,86 +1428,6 @@
       <property name="checkable">
        <bool>false</bool>
       </property>
-      <widget class="Line" name="line_7">
-       <property name="geometry">
-        <rect>
-         <x>165</x>
-         <y>10</y>
-         <width>245</width>
-         <height>1</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_8">
-       <property name="geometry">
-        <rect>
-         <x>-1</x>
-         <y>10</y>
-         <width>3</width>
-         <height>61</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_9">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>10</y>
-         <width>9</width>
-         <height>1</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_10">
-       <property name="geometry">
-        <rect>
-         <x>-1</x>
-         <y>70</y>
-         <width>412</width>
-         <height>1</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-      <widget class="Line" name="line_11">
-       <property name="geometry">
-        <rect>
-         <x>409</x>
-         <y>10</y>
-         <width>3</width>
-         <height>60</height>
-        </rect>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
       <widget class="QLabel" name="include_variables_in_origin_label">
        <property name="geometry">
         <rect>
@@ -1628,10 +1477,10 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QLabel" name="label_4">
+   <widget class="QLabel" name="label_var_config">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>555</x>
       <y>145</y>
       <width>171</width>
       <height>31</height>
@@ -1658,6 +1507,12 @@
       <height>111</height>
      </rect>
     </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
     <property name="widgetResizable">
      <bool>true</bool>
     </property>
@@ -1666,8 +1521,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>924</width>
-       <height>109</height>
+       <width>922</width>
+       <height>107</height>
       </rect>
      </property>
      <widget class="QPushButton" name="start_simulation_button">
@@ -1915,7 +1770,7 @@ Simulation</string>
      </widget>
     </widget>
    </widget>
-   <widget class="QLabel" name="label_9">
+   <widget class="QLabel" name="label_sim_status">
     <property name="geometry">
      <rect>
       <x>810</x>
@@ -1933,14 +1788,20 @@ Simulation</string>
      <string>Simulation Status</string>
     </property>
    </widget>
-   <widget class="QScrollArea" name="scrollArea">
+   <widget class="QScrollArea" name="model">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>28</y>
-      <width>361</width>
+      <width>371</width>
       <height>75</height>
      </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
     </property>
     <property name="widgetResizable">
      <bool>true</bool>
@@ -1950,8 +1811,8 @@ Simulation</string>
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>359</width>
-       <height>73</height>
+       <width>367</width>
+       <height>71</height>
       </rect>
      </property>
      <widget class="QLabel" name="loaded_model_label">
@@ -1981,7 +1842,7 @@ Simulation</string>
      <widget class="QToolButton" name="load_model_button">
       <property name="geometry">
        <rect>
-        <x>282</x>
+        <x>285</x>
         <y>5</y>
         <width>71</width>
         <height>61</height>
@@ -2013,10 +1874,10 @@ Model</string>
      </widget>
     </widget>
    </widget>
-   <widget class="QLabel" name="label_14">
+   <widget class="QLabel" name="label_model">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>180</x>
       <y>2</y>
       <width>51</width>
       <height>21</height>
@@ -2036,9 +1897,15 @@ Model</string>
      <rect>
       <x>20</x>
       <y>354</y>
-      <width>361</width>
+      <width>371</width>
       <height>381</height>
      </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
     </property>
     <property name="verticalScrollBarPolicy">
      <enum>Qt::ScrollBarAlwaysOn</enum>
@@ -2054,8 +1921,8 @@ Model</string>
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>342</width>
-       <height>379</height>
+       <width>350</width>
+       <height>377</height>
       </rect>
      </property>
      <widget class="QWidget" name="trace_name" native="true">
@@ -2096,7 +1963,7 @@ Model</string>
         <rect>
          <x>140</x>
          <y>0</y>
-         <width>181</width>
+         <width>191</width>
          <height>25</height>
         </rect>
        </property>
@@ -2193,7 +2060,7 @@ Model</string>
         <rect>
          <x>160</x>
          <y>0</y>
-         <width>161</width>
+         <width>171</width>
          <height>25</height>
         </rect>
        </property>
@@ -2450,7 +2317,7 @@ Model</string>
         <rect>
          <x>140</x>
          <y>0</y>
-         <width>181</width>
+         <width>191</width>
          <height>25</height>
         </rect>
        </property>
@@ -2706,7 +2573,7 @@ Model</string>
         <rect>
          <x>240</x>
          <y>0</y>
-         <width>81</width>
+         <width>91</width>
          <height>25</height>
         </rect>
        </property>
@@ -2912,7 +2779,7 @@ Model</string>
         <rect>
          <x>240</x>
          <y>0</y>
-         <width>81</width>
+         <width>91</width>
          <height>25</height>
         </rect>
        </property>
@@ -2982,7 +2849,7 @@ Model</string>
        <rect>
         <x>0</x>
         <y>370</y>
-        <width>321</width>
+        <width>331</width>
         <height>20</height>
        </rect>
       </property>

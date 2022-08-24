@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import sys
 import threading
 import time
@@ -7,7 +8,6 @@ import traceback
 import webbrowser as wb
 from copy import copy
 
-from dateutil.parser import parse
 from PySide6.QtCore import Signal, QRunnable, Slot, QThreadPool, QObject, QTime, QDateTime, QFile, \
     QLocale
 from PySide6.QtGui import QKeySequence, Qt, QIcon
@@ -16,21 +16,21 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBo
     QVBoxLayout, QLineEdit, QPlainTextEdit, QRadioButton, QSpinBox, \
     QComboBox, QDoubleSpinBox, QDateTimeEdit, QCheckBox, QTimeEdit, QPushButton, \
     QDialogButtonBox, QWidget
+from dateutil.parser import parse
 
 from src.jilg.Main.Configuration import Configuration
 from src.jilg.Main.Main import Main
 from src.jilg.Model.Distribution import Distribution
 from src.jilg.Model.SemanticInformation import SemanticInformation
 from src.jilg.Model.Transition import Transition
-from src.jilg.Other.Global import VariableTypes, print_summary_global
 from src.jilg.Model.Variable import Variable
 from src.jilg.Other import Global
 from src.jilg.Other.Global import Status
+from src.jilg.Other.Global import VariableTypes, print_summary_global
 from src.jilg.Simulation.Simulation import Weekday, SimStatus
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 from src.jilg.Simulation.ValueGenerator import ValueGenerator
 from src.jilg.UI.MainWindow import Ui_MainWindow
-import os
 
 
 class MainWindow(QMainWindow):
@@ -260,6 +260,7 @@ class MainGui:
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.window = MainWindow()
+        self.set_styles()
         self.window.setLocale(QLocale(QLocale.English))
         self.variable_inputs = []
         self.configure_menu_actions()
@@ -300,8 +301,52 @@ class MainGui:
 
         if os.name != 'nt':
             self.set_up_for_linux()
+
         self.check_user_preferences()
         sys.exit(self.app.exec())
+
+    def set_styles(self):
+        self.app.setStyleSheet(
+            "QGroupBox{font-size: 11pt; border: 1.5px solid gray; border-radius: 4px; subcontrol-position: top left;}"
+            "QLabel{font-size: 11pt;}"
+            "QComboBox{font-size: 10pt;}"
+            "QScrollArea{font-size: 11pt; border: 1.5px solid gray; border-radius: 4px;}"
+            "QCheckBox::indicator{width: 15px; height: 15px;}"
+            "QLabel#label_model{font-size: 13pt}"
+            "QLabel#label_general_config{font-size: 13pt}"
+            "QLabel#label_sim_config{font-size: 13pt}"
+            "QLabel#label_sim_status{font-size: 13pt}"
+            "QLabel#label_trans_config{font-size: 13pt}"
+            "QLabel#label_var_config{font-size: 13pt}"
+            "QLabel#label_welcome_screen_title{font-size: 20pt}")
+
+    def set_up_for_linux(self):
+        ui = self.window.ui
+        widgets = [ui.avg_trans_delay, ui.days, ui.hours_min_sec,
+                   ui.delay_time_delay_maximum,
+                   ui.lead_time_delay_maximum, ui.delay_time_delay_minimum, ui.lead_time_delay_minimum,
+                   ui.time_delay_sd,
+                   ui.lead_time_sd, ui.inlcude_values_in_origin_event_input,
+                   ui.include_variables_in_origin_label, ui.include_invisible_transitions]
+
+        for widget in widgets:
+            widget.move(widget.x() - 3, widget.y() + 8)
+        ui.lead_time_sd.move(ui.lead_time_sd.x(), ui.lead_time_sd.y() - 7)
+        ui.lead_time_delay_minimum.move(ui.lead_time_delay_minimum.x(), ui.lead_time_delay_minimum.y() - 7)
+        ui.lead_time_delay_maximum.move(ui.lead_time_delay_maximum.x(), ui.lead_time_delay_maximum.y() - 7)
+
+        ui.avg_trans_lead_days_input.move(ui.avg_trans_lead_days_input.x() - 3,
+                                          ui.avg_trans_lead_days_input.y())
+        ui.avg_trans_lead_time_input.move(ui.avg_trans_lead_time_input.x() - 3,
+                                          ui.avg_trans_lead_time_input.y())
+        labels = self.window.findChildren(QLabel)
+        for label in labels:
+            label.move(label.x(), label.y() + 2)
+        ui.include_variables_in_origin_label.move(ui.include_variables_in_origin_label.x(), ui.include_variables_in_origin_label.y() - 1)
+        ui.general_config.setFixedHeight(180)
+        self.app.setStyleSheet("QGroupBox{font-size: 11pt;}"
+                               "QLabel{font-size: 11pt;}"
+                               "QComboBox{font-size: 10pt;}")
 
     def fix_gui_element_values(self):
         self.window.ui.time_delay_minimum_time_input.setTime(QTime(00, 00, 00))
@@ -358,45 +403,6 @@ class MainGui:
         with open(path, 'w') as preference_file:
             json.dump(preferences, preference_file, indent=3)
 
-    def set_up_for_linux(self):
-        self.window.ui.line_10.setHidden(True)
-        self.window.ui.line_11.setHidden(True)
-        self.window.ui.line_7.setHidden(True)
-        self.window.ui.line_8.setHidden(True)
-        self.window.ui.line_9.setHidden(True)
-
-        self.window.ui.line_2.setHidden(True)
-        self.window.ui.line_3.setHidden(True)
-        self.window.ui.line_4.setHidden(True)
-        self.window.ui.line_5.setHidden(True)
-        self.window.ui.line_6.setHidden(True)
-        ui = self.window.ui
-        widgets = [ui.avg_trans_delay, ui.days, ui.hours_min_sec,
-                   ui.delay_time_delay_maximum,
-                   ui.lead_time_delay_maximum, ui.delay_time_delay_minimum, ui.lead_time_delay_minimum,
-                   ui.time_delay_sd,
-                   ui.lead_time_sd, ui.inlcude_values_in_origin_event_input,
-                   ui.include_variables_in_origin_label, ui.include_invisible_transitions]
-
-        for widget in widgets:
-            widget.move(widget.x() - 3, widget.y() + 8)
-        ui.lead_time_sd.move(ui.lead_time_sd.x(), ui.lead_time_sd.y() - 7)
-        ui.lead_time_delay_minimum.move(ui.lead_time_delay_minimum.x(), ui.lead_time_delay_minimum.y() - 7)
-        ui.lead_time_delay_maximum.move(ui.lead_time_delay_maximum.x(), ui.lead_time_delay_maximum.y() - 7)
-
-        ui.avg_trans_lead_days_input.move(ui.avg_trans_lead_days_input.x() - 3,
-                                          ui.avg_trans_lead_days_input.y())
-        ui.avg_trans_lead_time_input.move(ui.avg_trans_lead_time_input.x() - 3,
-                                          ui.avg_trans_lead_time_input.y())
-        labels = self.window.findChildren(QLabel)
-        for label in labels:
-            label.move(label.x(), label.y() + 2)
-        ui.include_variables_in_origin_label.move(ui.include_variables_in_origin_label.x(), ui.include_variables_in_origin_label.y() - 1)
-        ui.general_config.setFixedHeight(180)
-        self.app.setStyleSheet("QGroupBox{font-size: 11pt;}"
-                               "QLabel{font-size: 11pt;}"
-                               "QComboBox{font-size: 10pt;}")
-
     def update_gui_with_sim_status(self, update_info: GuiUpdateInformation):
         if update_info.errors_occurred:
             msg = QMessageBox()
@@ -406,7 +412,7 @@ class MainGui:
             msg.setWindowTitle("Error!")
             msg.setButtonText(1, "Ok")
             msg.exec()
-            if "No traces possible" not in update_info.errors:
+            if "No traces possible" not in update_info.errors and "The experimental 'All Traces'" not in update_info.errors:
                 ret = QMessageBox.question(self.window, '', "Write unfinished event logs to"
                                                             " output directory?"
                                            .format(x=len(self.main.event_logs)),

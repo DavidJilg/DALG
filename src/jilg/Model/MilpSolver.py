@@ -501,22 +501,3 @@ class MilpSolver:
                                                                                        bracketIndex:]
             bracketListIndex += 1
         return string, bracket_list
-
-
-if __name__ == "__main__":
-    lc = MilpSolver()
-    variables = [Variable("TUTH", "java.lang.Double", 0, 0, 0, 0, None, None, None, False),
-                 Variable("ULCE", "java.lang.String", 0, 0, 0, 0, None, None, None, False),
-                 Variable("MECO", "java.lang.Boolean", 0, 0, 0, 0, None, None, None, False)]
-    variables[0].value = 1.43
-    variables[0].has_current_value = True
-    variables[0].has_been_written_to = True
-
-    variables[1].value = "without ulceration"
-    variables[1].has_current_value = True
-    variables[1].has_been_written_to = True
-
-    variables[2].has_current_value = False
-    variables[2].has_been_written_to = False
-    print(lc.compile_and_evaluate_string("(MECO   != True) && ((TUTH < 2) && ((TUTH > 1.01)"
-                                         " && (ULCE == 'without ulceration')))", variables))

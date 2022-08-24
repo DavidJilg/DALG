@@ -17,60 +17,6 @@ class ModelAnalyser:
             variable_names.append(variable.name)
         self.determine_values(model, config, variable_names)
         self.determine_intervals(model, config, variable_names)
-        # self.determine_min_max_values(model, config)
-
-    def determine_min_max_values(self, model, config):
-        for variable in model.variables:
-            if variable.semantic_information.intervals:
-                if variable.type == VariableTypes.DOUBLE:
-                    offset = 1
-                else:
-                    offset = 1
-                if variable.min_value is None and variable.max_value is None:
-                    min = None
-                    max = None
-                    for interval in variable.semantic_information.intervals:
-                        operator = interval[0]
-                        if variable.type == VariableTypes.DATE:
-                            value = int(parse(interval[1]).timestamp())
-                        else:
-                            value = interval[1]
-                        if operator in ["<", "<="]:
-                            new_min = value - offset
-                            if min is None:
-                                min = new_min
-                            elif new_min < min:
-                                min = new_min
-                        elif operator in [">", ">="]:
-                            new_max = value + offset
-                            if max is None:
-                                max = new_max
-                            elif new_max > max:
-                                max = new_max
-                        elif operator == "==":
-                            if max is None:
-                                max = new_max
-                            elif new_max > max:
-                                max = new_max
-                            if min is None:
-                                min = new_min
-                            elif new_min < min:
-                                min = new_min
-                    if min is not None:
-                        if min > 0:
-                            min = 0
-                    if max is not None:
-                        if min is not None:
-                            if max - min < 0:
-                                max = min + offset
-                        else:
-                            min = max - offset
-                        variable.max_value = max
-                        config.get_sem_info_by_variable_name(variable.original_name).max = max
-                        config.get_sem_info_by_variable_name(variable.original_name).has_max = True
-                        variable.min_value = min
-                        config.get_sem_info_by_variable_name(variable.original_name).min = min
-                        config.get_sem_info_by_variable_name(variable.original_name).has_min = True
 
     def determine_intervals(self, model, config, var_names, with_return=False):
         if var_names is None:

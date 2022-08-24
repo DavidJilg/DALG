@@ -4,7 +4,7 @@ from dateutil.parser import parse
 
 import pytz
 
-DALG_VERSION = "1.3.0"
+DALG_VERSION = "1.3.1"
 
 
 test_files_path = "../../resources/test_files/"  # relative path from test classes (src/jilg/Tests)
