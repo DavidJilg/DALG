@@ -39,7 +39,7 @@ if __name__ == "__main__":
                         print("An error occurred while parsing the configuration file to configure"
                               "the simulation!")
                     if not stop:
-                        main.config.configure_model(main.model)
+                        main.config.configure_variables_and_transitions(main.model)
                         print("Running the simulation!")
                         main.run_simulation(True, False, threading.Lock())
                 else:

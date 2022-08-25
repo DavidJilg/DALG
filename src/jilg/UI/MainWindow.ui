@@ -1372,9 +1372,9 @@
    <widget class="QScrollArea" name="variable_config">
     <property name="geometry">
      <rect>
-      <x>415</x>
+      <x>410</x>
       <y>174</y>
-      <width>450</width>
+      <width>451</width>
       <height>561</height>
      </rect>
     </property>
@@ -1398,7 +1398,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>429</width>
+       <width>430</width>
        <height>557</height>
       </rect>
      </property>

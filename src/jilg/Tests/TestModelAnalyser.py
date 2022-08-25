@@ -51,7 +51,7 @@ class TestModelAnalyser(TestCase):
     def test_with_model(self):
         self.analyser.analyse_model(self.model, self.config)
         var_values = self.model.get_variable_by_name("patient_status").semantic_information.values
-        config_values = self.config.get_semantic_info_by_name("patient_status").values
+        config_values = self.config.get_sem_info_by_variable_name("patient_status").values
         self.assertEqual([['emergency'], [1]], var_values)
         self.assertEqual([['emergency'], [1]], config_values)
 
@@ -64,7 +64,7 @@ class TestModelAnalyser(TestCase):
         self.config.create_basic_configuration(self.model, Global.test_files_path + "test_dpn.pnml")
         self.analyser.analyse_model(self.model, self.config)
         var_values = self.model.get_variable_by_name("variable2").semantic_information.values
-        config_values = self.config.get_semantic_info_by_name("variable2").values
+        config_values = self.config.get_sem_info_by_variable_name("variable2").values
         self.assertEqual([[5, 10], [1, 1]], var_values)
         self.assertEqual([[5, 10], [1, 1]], config_values)
 
@@ -79,6 +79,6 @@ class TestModelAnalyser(TestCase):
                                                Global.test_files_path + "test_dpn.pnml")
         self.analyser.analyse_model(self.model, self.config)
         var_values = self.model.get_variable_by_name("variable2").semantic_information.values
-        config_values = self.config.get_semantic_info_by_name("variable2").values
+        config_values = self.config.get_sem_info_by_variable_name("variable2").values
         self.assertEqual([[False, True], [1, 1]], var_values)
         self.assertEqual([[False, True], [1, 1]], config_values)

@@ -18,6 +18,20 @@ class Place:
     inputs: []
     outputs: []
 
+    def __init__(self, name):
+        self.name = name
+        self.id = ""
+        self.pos_x = 0.0
+        self.pos_y = 0.0
+        self.dim_x = 0.0
+        self.dim_y = 0.0
+        self.fill_color = None
+        self.tool_specific_info = None
+        self.inputs = []
+        self.outputs = []
+        self.model = None
+        self.token_count = 0
+
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
@@ -32,17 +46,3 @@ class Place:
         for transition in self.outputs:
             transitions.append(transition.id)
         return transitions
-
-    def __init__(self, name):
-        self.name = name
-        self.id = ""
-        self.pos_x = 0.0
-        self.pos_y = 0.0
-        self.dim_x = 0.0
-        self.dim_y = 0.0
-        self.fill_color = None
-        self.tool_specific_info = None
-        self.inputs = []
-        self.outputs = []
-        self.model = None
-        self.token_count = 0

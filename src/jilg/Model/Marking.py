@@ -5,7 +5,11 @@ class Marking:
     name: str
     token_places: list
 
-    def print_summary(self, print_list_elements = False):
+    def __init__(self, name):
+        self.name = name
+        self.token_places = []
+
+    def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
     def to_string(self, model=None):
@@ -29,7 +33,7 @@ class Marking:
                         string += str(token_place)
             return string
 
-    def to_min_string(self):
+    def to_minimalistic_string(self):
         string = self.name + ": "
         for index, token_place in enumerate(self.token_places):
             if token_place[1] > 0:
@@ -38,7 +42,3 @@ class Marking:
                 else:
                     string += str(token_place)
         return string
-
-    def __init__(self, name):
-        self.name = name
-        self.token_places = []

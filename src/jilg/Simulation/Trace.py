@@ -8,6 +8,11 @@ class Trace:
     events: list
     variables: list  # ("var_name", var_value, "var_type")
 
+    def __init__(self, name):
+        self.name = name
+        self.events = []
+        self.variables = []
+
     def add_trace_variables(self, model):
         for variable in model.variables:
             if variable.has_current_value and variable.semantic_information.trace_variable:
@@ -25,13 +30,6 @@ class Trace:
                         self.variables.append((variable.original_name, variable.value,
                                                self.get_xml_variable_type_string(variable.type)))
 
-    def truncate(self, f, n):
-        s = '{}'.format(f)
-        if 'e' in s or 'E' in s:
-            return '{0:.{1}f}'.format(f, n)
-        i, p, d = s.partition('.')
-        return '.'.join([i, (d + '0' * n)[:n]])
-
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
@@ -46,12 +44,6 @@ class Trace:
         for event in self.events:
             trans_ids.append(event.trans_id)
         return trans_ids
-
-    def __init__(self, name):
-        self.name = name
-        self.events = []
-        self.variables = []
-
 
     def get_xml_variable_type_string(self, var_type):
         if var_type == VariableTypes.DATE:

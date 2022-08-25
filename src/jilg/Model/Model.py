@@ -16,6 +16,16 @@ class Model:
     current_marking: Marking
     final_markings: list
 
+    def __init__(self, name):
+        self.name = name
+        self.id = ""
+        self.type = ""
+        self.places = []
+        self.transitions = []
+        self.variables = []
+        self.arcs = []
+        self.current_marking = None
+        self.final_markings = []
     def reset(self):
         self.current_marking = deepcopy(self.initial_marking)
         for variable in self.variables:
@@ -41,9 +51,9 @@ class Model:
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
-    def get_variable_by_name(self, name):
+    def get_variable_by_name(self, var_name):
         for var in self.variables:
-            if var.name == name or var.original_name == name:
+            if var.name == var_name or var.original_name == var_name:
                 return var
 
         return None
@@ -89,12 +99,6 @@ class Model:
         for transition in self.transitions:
             if transition.is_enabled(with_data):
                 enabled_transitions.append(transition)
-
-        #print("-------------------------------------------")
-        #transition_names = []
-        #for transition in enabled_transitions:
-        #    transition_names.append(transition.name)
-        #print(transition_names)
 
         if with_probabilities and enabled_transitions:
             probabilities = self.calculate_probabilities(enabled_transitions)
@@ -152,14 +156,3 @@ class Model:
         for place in self.places:
             new_token_places.append((place.id, place.token_count))
         self.current_marking.token_places = new_token_places
-
-    def __init__(self, name):
-        self.name = name
-        self.id = ""
-        self.type = ""
-        self.places = []
-        self.transitions = []
-        self.variables = []
-        self.arcs = []
-        self.current_marking = None
-        self.final_markings = []

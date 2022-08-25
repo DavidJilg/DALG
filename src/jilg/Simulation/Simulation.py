@@ -201,7 +201,7 @@ class Simulation:
                                 for transition in enabled_transitions:
                                     model_copy = deepcopy(model)
                                     model_copy.fire_transition(transition.id, False)
-                                    current_marking = model_copy.current_marking.to_min_string()
+                                    current_marking = model_copy.current_marking.to_minimalistic_string()
                                     trace_copy = current_trace[:]
                                     trace_copy.append(transition.id)
                                     markings_copy = current_trace_seen_markings[:]

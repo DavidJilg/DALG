@@ -15,7 +15,7 @@ from src.jilg.Model.Variable import Variable
 class PnmlReader:
     undefined_id_count: int
     final_marking_missing: bool
-    warning: bool
+    warning_occurred: bool
     warnings: list
     initial_marking_found: bool
     errors: list
@@ -23,26 +23,29 @@ class PnmlReader:
     def __init__(self):
         self.undefined_id_count = 0
         self.final_marking_missing = False
-        self.warning = False
+        self.warning_occurred = False
         self.initial_marking_found = False
         self.warnings = []
 
     def read_pnml(self, path):
         try:
             model_obj, net = self.setup_model(path)
+
             self.read_variables(model_obj, net)
             self.read_pages(model_obj, net, self.get_children_by_tag(net, "page"))
             self.read_page(model_obj, net)
             self.read_final_markings(model_obj, net)
             self.configure_arc_references(model_obj)
+
             model_obj.setup_current_marking()
             model_obj.initial_marking = deepcopy(model_obj.current_marking)
+
             self.replace_non_valid_variable_names(model_obj)
             self.add_missing_read_variables(model_obj)
             self.check_model_conformance(model_obj)
             return model_obj, self.warnings
         except MissingEssentialValueError as error:
-            print("The following error occurred while parsing the model: "+error.message)
+            print("The following error occurred while parsing the model: " + error.message)
             self.errors = [error.message]
             return None, self.errors
         except ModelConformanceError as error:
@@ -65,6 +68,7 @@ class PnmlReader:
         place_ids = []
         for place in model_obj.places:
             place_ids.append(place.id)
+
         for final_marking in model_obj.final_markings:
             for place_id in place_ids:
                 place_missing = True
@@ -75,7 +79,6 @@ class PnmlReader:
                 if place_missing:
                     final_marking.token_places.append((place_id, 0))
 
-
     def replace_non_valid_variable_names(self, model):
         replacement_index = 0
         var_names = []
@@ -83,22 +86,23 @@ class PnmlReader:
         for variable in model.variables:
             var_names.append(variable.name)
             variables.append(variable)
-        tmp = list(zip(var_names, variables))
-        tmp.sort(key=lambda s: len(s[0]))
-        tmp.reverse()
+        variable_names_and_objs = list(zip(var_names, variables))
+        variable_names_and_objs.sort(key=lambda s: len(s[0]))
+        variable_names_and_objs.reverse()
+
         while True:
-            tmp.sort(key=lambda s: len(s[0]))
-            tmp.reverse()
+            variable_names_and_objs.sort(key=lambda s: len(s[0]))
+            variable_names_and_objs.reverse()
             var_names = []
-            for var_tuple in tmp:
+            for var_tuple in variable_names_and_objs:
                 var_names.append(var_tuple[0])
             var_needs_replacement = False
             var_replacement_name = ""
 
             for var_name in var_names:
-                for var_name2 in var_names:
-                    if var_name2 != var_name:
-                        if var_name2 in var_name:
+                for other_variable in var_names:
+                    if other_variable != var_name:
+                        if other_variable in var_name:
                             if not var_needs_replacement:
                                 var_needs_replacement = True
                                 var_replacement_name = var_name
@@ -108,20 +112,21 @@ class PnmlReader:
             if not var_needs_replacement:
                 break
             else:
-                tmp_copy = []
+                variable_names_and_objs = []
                 replacement_tuple = None
-                for var_tuple in tmp:
+                for var_tuple in variable_names_and_objs:
                     if var_replacement_name == var_tuple[0]:
                         replacement_tuple = var_tuple
                     else:
-                        tmp_copy.append(var_tuple)
-                replacement_tuple = ("replacement_name"+str(replacement_index),
+                        variable_names_and_objs.append(var_tuple)
+
+                replacement_tuple = ("replacement_name" + str(replacement_index),
                                      replacement_tuple[1])
                 replacement_tuple[1].original_name = replacement_tuple[1].name
                 replacement_tuple[1].name = replacement_tuple[0]
                 replacement_tuple[1].replacement = True
-                tmp_copy.append(replacement_tuple)
-                tmp = tmp_copy
+                variable_names_and_objs.append(replacement_tuple)
+                variable_names_and_objs = variable_names_and_objs
                 replacement_index += 1
         invalid_chars = [" '&',  '|',  '=',  '!',  '(', ')',  "]
         for operator in Operators:
@@ -162,7 +167,7 @@ class PnmlReader:
                     else:
                         if operator.value in variable.name:
                             variable.original_name = variable.name
-                            variable.name = "replacement_variable"+str(replacement_index)
+                            variable.name = "replacement_variable" + str(replacement_index)
                             variable.replacement = True
                             replacement_index += 1
 
@@ -195,7 +200,6 @@ class PnmlReader:
                     if var[0] in trans.guard.guard_string:
                         trans.guard.guard_string = trans.guard.guard_string.replace(var[0], var[1])
 
-
     def check_model_conformance(self, model_obj):
         if len(model_obj.places) < 1:
             raise ModelConformanceError("The model has no places!")
@@ -203,10 +207,12 @@ class PnmlReader:
             raise ModelConformanceError("The model has no transitions!")
         if len(model_obj.arcs) < 1:
             raise ModelConformanceError("The model has no arcs!")
+
         for place in model_obj.places:
             if len(place.inputs) + len(place.outputs) < 1:
                 self.warnings.append("Place with the id '{id}' is not connected to any"
                                      " transitions!".format(id=place.id))
+
         for transition in model_obj.transitions:
             if len(transition.inputs) + len(transition.outputs) < 1:
                 self.warnings.append("Transition with the id '{id}' is not connected to any"
@@ -215,6 +221,7 @@ class PnmlReader:
                 if transition.guard.guard_string == "" or transition.guard.guard_string is None:
                     self.warnings.append("Transition with the id '{id}' has a invalid guard!"
                                          .format(id=transition.id))
+
         if len(model_obj.final_markings) < 1:
             self.warnings.append("The model has no final markings!")
         initial_token = False
@@ -308,7 +315,7 @@ class PnmlReader:
         self.add_graphics(place, element)
         initial_marking = self.get_child_by_tag(element, "initialMarking")
         initial_marking_warning = "Invalid initial marking definition for the place with the id" \
-                                  " '{place_id}'!".format(place_id = place.id)
+                                  " '{place_id}'!".format(place_id=place.id)
         if initial_marking is not None:
             if len(initial_marking) > 0:
                 initial_marking_text = initial_marking[0].text
@@ -501,11 +508,10 @@ class MissingEssentialValueError(Exception):
         self.message = message.format(value=value)
         super().__init__(self.message)
 
+
 class ModelConformanceError(Exception):
 
     def __init__(self, value, message="{value}"):
         self.value = value
         self.message = message.format(value=value)
         super().__init__(self.message)
-
-

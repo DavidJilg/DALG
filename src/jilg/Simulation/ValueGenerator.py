@@ -17,6 +17,12 @@ class ValueGenerator:
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
+    def __init__(self, model, rng):
+        self.model = model
+        self.rng = rng
+        self.milp_solver = MilpSolver()
+        self.number_of_tries = 10
+
     def generate_variable_values(self, transition):
         written_variables = []
         written_variables_tmp = []
@@ -90,11 +96,6 @@ class ValueGenerator:
         dependencies = variable.semantic_information.dependencies
         invalid_values = []
         if dependencies:
-            # if variable.has_current_value:
-            #     for dependency in dependencies:
-            #         if dependency[0] in ["SELF_REFERENCE", "self", "SELF",
-            #                              "self_reference", "Self_Reference"]:
-            #             return self.generate_self_reference_value(dependency, variable, transition)
             constraints = self.evaluate_dependencies(dependencies, self.model)
             if constraints:
                 interval_constraints, equal_constraints, not_equal_constraints = \
@@ -133,13 +134,6 @@ class ValueGenerator:
                                      "self_reference", "Self_Reference"]:
                     return self.generate_self_reference_value(dependency, variable, transition)
         if variable.semantic_information.used_information == 0:
-            # for i in range(self.number_of_tries):
-            #     value = self.choose_value(variable)
-            #     if value not in invalid_values:
-            #         if variable.type == VariableTypes.DOUBLE:
-            #             return round(value, variable.semantic_information.precision)
-            #         else:
-            #             return value
             value = self.choose_value(variable, invalid_values)
             if variable.type == VariableTypes.DOUBLE:
                 return round(value, variable.semantic_information.precision)
@@ -238,7 +232,7 @@ class ValueGenerator:
                 interval_constraints.append(constraint)
         return interval_constraints, equal_constraints, not_equal_constraints
 
-    def evaluate_dependencies(self, dependencies, model, print_debug=False):
+    def evaluate_dependencies(self, dependencies, model):
         constraints = []
         for dependency in dependencies:
             if dependency[0] not in ["SELF_REFERENCE", "self", "SELF",
@@ -248,19 +242,7 @@ class ValueGenerator:
                 for variable in model.variables:
                     if variable.name in fixed_dependency:
                         read_variables.append(variable)
-                if print_debug:
-                    if fixed_dependency == "(MECO != True) && ((TUTH < 1) && ((ULCE == 'with ulceration') || (MIRA == 'increased')))":
-                        print_debug_var = True
-                        variable_values = []
-                        for variable in read_variables:
-                            if variable.has_current_value:
-                                variable_values.append((variable.name, variable.value))
-                        print(fixed_dependency, variable_values)
-                    else:
-                        print_debug_var = False
                 if self.evaluate_logical_expression(fixed_dependency, read_variables):
-                    if print_debug and print_debug_var:
-                        print("true")
                     constraints.append(dependency[1])
         return constraints
 
@@ -476,9 +458,3 @@ class ValueGenerator:
         elif variable.type == VariableTypes.DOUBLE:
             return float(self.rng.uniform(variable.semantic_information.min,
                                           variable.semantic_information.max))
-
-    def __init__(self, model, rng):
-        self.model = model
-        self.rng = rng
-        self.milp_solver = MilpSolver()
-        self.number_of_tries = 10

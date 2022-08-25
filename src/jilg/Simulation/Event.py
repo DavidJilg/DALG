@@ -42,13 +42,6 @@ class Event:
                             self.variables.append((variable.original_name, variable.value,
                                                    self.get_xml_variable_type_string(variable.type)))
 
-    def truncate(self, f, n):
-        s = '{}'.format(f)
-        if 'e' in s or 'E' in s:
-            return '{0:.{1}f}'.format(f, n)
-        i, p, d = s.partition('.')
-        return '.'.join([i, (d + '0' * n)[:n]])
-
     def get_xml_variable_type_string(self, var_type):
         if var_type == VariableTypes.DATE:
             return "date"

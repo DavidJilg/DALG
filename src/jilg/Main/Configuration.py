@@ -38,13 +38,7 @@ class Configuration:
         for sem_info in self.semantic_information:
             sem_info.remove_value_duplicates()
 
-    def get_sem_info_by_variable_name(self, name):
-        for sem_info in self.semantic_information:
-            if sem_info.variable_name == name:
-                return sem_info
-        return None
-
-    def configure_model(self, model):
+    def configure_variables_and_transitions(self, model):
         for variable in model.variables:
             for var_config in self.semantic_information:
                 if variable.name == var_config.variable_name:
@@ -74,7 +68,7 @@ class Configuration:
         self.number_of_event_logs = nr_of_event_logs
         self.model_file_path = path
         if output_dir == "":
-            self.output_directory_path = os.getcwd()+"/"
+            self.output_directory_path = os.getcwd() + "/"
         else:
             self.output_directory_path = output_dir
         self.simulation_config = SimulationConfiguration()
@@ -94,8 +88,7 @@ class Configuration:
                 sem_info_obj.has_max = False
             self.semantic_information.append(sem_info_obj)
         self.configure_simulation(model)
-        self.configure_model(model)
-
+        self.configure_variables_and_transitions(model)
 
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
@@ -107,9 +100,9 @@ class Configuration:
                      'number_of_event_logs': self.number_of_event_logs,
                      'logs_in_one_file': self.logs_in_one_file,
                      'simulation_config': self.write_simulation_config(),
-                     'semantic_information': [],
                      "copy_config_to_output_dir": self.copy_config_to_output_dir,
-                     "include_metadata": self.include_metadata}
+                     "include_metadata": self.include_metadata,
+                     'semantic_information': []}
 
         for sem_info in self.semantic_information:
             json_data['semantic_information'].append(self.write_semantic_information(sem_info))
@@ -125,7 +118,7 @@ class Configuration:
                                'min_trace_length': self.simulation_config.min_trace_length,
                                'max_loop_iterations_markings': self.simulation_config.max_loop_iterations,
                                'max_loop_iterations_transitions': self.simulation_config
-                                   .max_loop_iterations_transitions,
+                               .max_loop_iterations_transitions,
                                'max_trace_duplicates': self.simulation_config.max_trace_duplicates,
                                'duplicates_with_data': self.simulation_config.duplicates_with_data_perspective,
                                'only_ending_traces': self.simulation_config.only_ending_traces,
@@ -151,14 +144,14 @@ class Configuration:
                                'allow_duplicate_trace_names':
                                    self.simulation_config.allow_duplicate_trace_names,
                                'model_has_no_increasing_loop': self.simulation_config.
-                                   model_has_no_increasing_loop,
+                               model_has_no_increasing_loop,
                                'include_partial_traces': self.simulation_config.
-                                   include_partial_traces,
+                               include_partial_traces,
                                "values_in_origin_event":
                                    self.simulation_config.values_in_origin_event,
                                "utc_offset": self.simulation_config.utc_offset,
                                "include_invisible_transitions_in_log":
-                               self.simulation_config.include_invisible_transitions_in_log,
+                                   self.simulation_config.include_invisible_transitions_in_log,
                                "duplicates_with_invisible_transitions":
                                    self.simulation_config.duplicates_with_invisible_trans,
                                "perform_trace_estimation":
@@ -167,7 +160,7 @@ class Configuration:
                                "use_only_values_from_guard_strings":
                                    self.simulation_config.use_only_values_from_guard_strings,
                                "timestamp_millieseconds": self.simulation_config.
-                                   timestamp_millieseconds
+                               timestamp_millieseconds
                                }
 
             for transition_config in self.simulation_config.transition_configs:
@@ -271,16 +264,16 @@ class Configuration:
                 self.logs_in_one_file = json_data["logs_in_one_file"]
 
             sim_config_dict = json_data["simulation_config"]
-            self.simulation_config = self.read_sim_config(sim_config_dict)
+            self.simulation_config = self.read_simulation_config(sim_config_dict)
             self.semantic_information = []
 
             self.copy_config_to_output_dir = json_data["copy_config_to_output_dir"]
             for sem_info in json_data['semantic_information']:
                 self.semantic_information.append(self.read_sem_info(sem_info, model))
         if with_model:
-            self.configure_model(model)
+            self.configure_variables_and_transitions(model)
 
-    def read_sim_config(self, sim_config_dict):
+    def read_simulation_config(self, sim_config_dict):
         sim_config = SimulationConfiguration()
         sim_config.sim_strategy = sim_config_dict['sim_strategy']
 
@@ -321,12 +314,12 @@ class Configuration:
         sim_config.utc_offset = sim_config_dict["utc_offset"]
 
         sim_config.values_in_origin_event = sim_config_dict['values_in_origin_event']
-        sim_config.include_invisible_transitions_in_log =\
+        sim_config.include_invisible_transitions_in_log = \
             sim_config_dict['include_invisible_transitions_in_log']
 
         sim_config.perform_trace_estimation = sim_config_dict["perform_trace_estimation"]
 
-        sim_config.duplicates_with_invisible_trans =\
+        sim_config.duplicates_with_invisible_trans = \
             sim_config_dict["duplicates_with_invisible_transitions"]
 
         sim_config.merge_intervals = sim_config_dict["merge_intervals"]
@@ -389,7 +382,6 @@ class Configuration:
         sem_info_obj.precision = sem_info["precision"]
         sem_info_obj.use_initial_value = sem_info["use_initial_value"]
         sem_info_obj.generate_initial_value = sem_info["generate_initial_value"]
-        #if sem_info.has_initial_value:
         sem_info_obj.include_inverse_intervals = sem_info["include_inverse_intervals"]
         sem_info_obj.initial_value = sem_info["initial_value"]
 
@@ -429,16 +421,16 @@ class Configuration:
             sem_info_obj.self_reference_deviation = 0
 
         if sem_info_obj.has_distribution:
-            sem_info_obj.distribution = self.init_distribution(sem_info["distribution"])
+            sem_info_obj.distribution = self.initialize_distribution(sem_info["distribution"])
 
         return sem_info_obj
 
-    def init_distribution(self, distribution_dict):
+    def initialize_distribution(self, distribution_dict):
         distribution = Distribution(self.rng, distribution_dict["type"], distribution_dict)
         return distribution
 
-    def get_semantic_info_by_name(self, name):
+    def get_sem_info_by_variable_name(self, var_name):
         for sem_info in self.semantic_information:
-            if sem_info.variable_name == name:
+            if sem_info.variable_name == var_name:
                 return sem_info
         return None

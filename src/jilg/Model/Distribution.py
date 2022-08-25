@@ -95,16 +95,3 @@ class Distribution:
         elif self.distribution_type == "exponential" or \
                 self.distribution_type == "truncated_exponential":
             return self.generator.rvs()
-        else:
-            # https://numpy.org/doc/1.16/reference/routines.random.html
-            # https://pathbliss.com/index.php/2017/11/18/distributions-medical-statistics/
-            pass  # Todo
-
-            '''
-            Bernoulli Distribution
-            Uniform Distribution
-            Binomial Distribution
-            Normal Distribution
-            Poisson Distribution
-            Exponential Distribution
-            '''

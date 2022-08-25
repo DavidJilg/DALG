@@ -27,6 +27,24 @@ class Transition:
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
+    def __init__(self, name):
+        self.name = name
+        self.id = ""
+        self.invisible = False
+        self.pos_x = 0.0
+        self.pos_y = 0.0
+        self.dim_x = 0.0
+        self.dim_y = 0.0
+        self.tool_specific_info = None
+        self.fill_color = ""
+        self.guard = None
+        self.inputs = []
+        self.outputs = []
+        self.model = None
+        self.writes_variables = []
+        self.reads_variables = []
+        self.milp_solver = MilpSolver()
+
     def get_writes_variables_names(self):
         variables = []
         for var in self.writes_variables:
@@ -85,21 +103,3 @@ class Transition:
                                                                 self.reads_variables)
         else:
             return True
-
-    def __init__(self, name):
-        self.name = name
-        self.id = ""
-        self.invisible = False
-        self.pos_x = 0.0
-        self.pos_y = 0.0
-        self.dim_x = 0.0
-        self.dim_y = 0.0
-        self.tool_specific_info = None
-        self.fill_color = ""
-        self.guard = None
-        self.inputs = []
-        self.outputs = []
-        self.model = None
-        self.writes_variables = []
-        self.reads_variables = []
-        self.milp_solver = MilpSolver()

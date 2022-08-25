@@ -53,7 +53,7 @@ class Main:
     def analyse_model(self):
         self.analyser.analyse_model(self.model, self.config)
 
-    def run_simulation(self, write_event_logs, control_with_thread=False, gui_lock=None):
+    def run_simulation(self, write_event_logs, comand_line_mode=False, gui_lock=None):
         self.sim_exit_with_errors = False
         self.errors = ""
         self.rng = np.random.default_rng(self.config.simulation_config.random_seed)
@@ -62,62 +62,70 @@ class Main:
         self.simulation = Simulation(self.model, self.config.simulation_config, self.rng,
                                      self.config.number_of_event_logs, self.config.event_log_name)
         self.simulation.config = self.config.simulation_config
+
         if gui_lock is not None:
             with gui_lock:
                 self.sim_status = SimStatus()
         else:
             self.sim_status = SimStatus()
+
         self.simulation.run()
-        if control_with_thread:
-            self.thread = threading.Thread(target=self.control_simulation_thread, args=[gui_lock],
-                                           daemon=True)
+
+        if comand_line_mode:
+            self.run_command_line_mode(write_event_logs)
+        else:
+            self.thread = threading.Thread(target=self.control_simulation_thread, args=[gui_lock], daemon=True)
             self.sim_stop = False
             self.thread.start()
-        else:
-            try:
-                while True:
-                    time.sleep(1)
-                    with self.simulation.thread_status_lock:
-                        sim_status = self.simulation.sim_status
-                    print("\nCurrent simulation status:")
-                    print("    Nr. of current event logs: {logs}".format(logs=str(sim_status.nr_of_current_logs)))
-                    print("    Nr. of current event log traces: {traces}"
-                          .format(traces=str(sim_status.nr_of_current_traces)))
-                    if self.config.simulation_config.sim_strategy in ["random_exploration", "all"]:
-                        print("    Possible traces estimation {traces}"
-                              .format(traces=str(sim_status.nr_of_estimated_traces)))
-                    if sim_status.simulation_ended:
-                        break
-                self.event_logs = self.simulation.event_logs
-                print("\nSimulation finished!\n\n{logs} event logs with a total number of {traces}"
-                      " traces have been generated! \n\nWriting event logs to:\n {dir}!"
-                      .format(dir=self.config.output_directory_path, logs=len(self.event_logs),
-                              traces=len(self.event_logs[0].traces) * len(self.event_logs)))
-                if write_event_logs:
-                    self.write_event_logs(self.simulation.event_logs)
-                print("\nEvent logs written to output directory!")
-            except KeyboardInterrupt:
-                print("\nKeyboard Interrupt! Aborting simulation! Please wait!")
-                with self.simulation.thread_status_lock:
-                    self.simulation.thread_stop = True
-                time.sleep(3)
-                with self.simulation.thread_status_lock:
-                    self.event_logs = self.simulation.event_logs
-                if write_event_logs and self.event_logs:
-                    print("\nWriting even log/traces that have been generated so far to {dir}."
-                          .format(dir=self.config.output_directory_path))
-                    self.write_event_logs(self.simulation.event_logs)
-                    print("\nEvent logs written to output directory!")
 
-            except:
-                print("\nThe following exception occurred during the simulation!")
-                print(traceback.format_exc())
+    def run_command_line_mode(self, write_event_logs):
+        try:
+            while True:
+                time.sleep(1)
+                with self.simulation.thread_status_lock:
+                    sim_status = self.simulation.sim_status
+
+                print("\nCurrent simulation status:")
+                print("    Nr. of current event logs: {logs}".format(logs=str(sim_status.nr_of_current_logs)))
+                print("    Nr. of current event log traces: {traces}"
+                      .format(traces=str(sim_status.nr_of_current_traces)))
+                if self.config.simulation_config.sim_strategy in ["random_exploration", "all"]:
+                    print("    Possible traces estimation {traces}"
+                          .format(traces=str(sim_status.nr_of_estimated_traces)))
+                if sim_status.simulation_ended:
+                    break
+
+            self.event_logs = self.simulation.event_logs
+            print("\nSimulation finished!\n\n{logs} event logs with a total number of {traces}"
+                  " traces have been generated! \n\nWriting event logs to:\n {dir}"
+                  .format(dir=self.config.output_directory_path, logs=len(self.event_logs),
+                          traces=len(self.event_logs[0].traces) * len(self.event_logs)))
+            if write_event_logs:
+                self.write_event_logs(self.simulation.event_logs)
+            print("\nEvent logs written to output directory!")
+
+        except KeyboardInterrupt:
+            print("\nKeyboard Interrupt! Aborting simulation! Please wait!")
+            with self.simulation.thread_status_lock:
+                self.simulation.thread_stop = True
+            time.sleep(3)
+            with self.simulation.thread_status_lock:
                 self.event_logs = self.simulation.event_logs
-                if write_event_logs and self.event_logs:
-                    print("\nWriting even log/traces that have been generated so far to {dir}."
-                          .format(dir=self.config.output_directory_path))
-                    self.write_event_logs(self.simulation.event_logs)
-                    print("\nUnfinished event logs written to output directory!")
+            if write_event_logs and self.event_logs:
+                print("\nWriting even log/traces that have been generated so far to {dir}."
+                      .format(dir=self.config.output_directory_path))
+                self.write_event_logs(self.simulation.event_logs)
+                print("\nEvent logs written to output directory!")
+
+        except:
+            print("\nThe following exception occurred during the simulation!")
+            print(traceback.format_exc())
+            self.event_logs = self.simulation.event_logs
+            if write_event_logs and self.event_logs:
+                print("\nWriting even log/traces that have been generated so far to {dir}."
+                      .format(dir=self.config.output_directory_path))
+                self.write_event_logs(self.simulation.event_logs)
+                print("\nUnfinished event logs written to output directory!")
 
     def control_simulation_thread(self, gui_lock):
         try:

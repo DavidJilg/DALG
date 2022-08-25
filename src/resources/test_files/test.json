@@ -106,6 +106,8 @@
       "use_only_values_from_guard_strings": true,
       "timestamp_millieseconds": true
    },
+   "copy_config_to_output_dir": true,
+   "include_metadata": false,
    "semantic_information": [
       {
          "variable_name": "patient_status",
@@ -171,7 +173,5 @@
             "maximum": 20
          }
       }
-   ],
-   "copy_config_to_output_dir": true,
-   "include_metadata": false
+   ]
 }

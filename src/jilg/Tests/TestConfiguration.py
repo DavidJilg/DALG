@@ -37,7 +37,7 @@ class TestConfiguration(TestCase):
         config.logs_in_one_file = True
         config.event_log_name = "test_event_log_name"
 
-        sem_info = config.get_semantic_info_by_name("variable2")
+        sem_info = config.get_sem_info_by_variable_name("variable2")
         sem_info.dependencies.append("(x=1) => (Y = 5)")
         sem_info.dependencies.append("(x=2) => (Y = 5)")
         sem_info.dependencies.append("(x=3) => (Y = 5)")
@@ -115,7 +115,7 @@ class TestConfiguration(TestCase):
             self.assertEqual(variable.name, variable.semantic_information.variable_name)
 
     def check_config_after_write_and_read(self, config):
-        sem_info = config.get_semantic_info_by_name("variable2")
+        sem_info = config.get_sem_info_by_variable_name("variable2")
         self.assertEqual("(x=1) => (Y = 5)", sem_info.dependencies[0])
         self.assertEqual("(x=2) => (Y = 5)", sem_info.dependencies[1])
         self.assertEqual("(x=3) => (Y = 5)", sem_info.dependencies[2])

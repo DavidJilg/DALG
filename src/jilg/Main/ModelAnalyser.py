@@ -4,12 +4,13 @@ import traceback
 from PySide6.QtCore import QDateTime
 
 from src.jilg.Other.Global import VariableTypes
-from dateutil.parser import parse
 
 
 class ModelAnalyser:
     search_stop_operators_chars = [">", "<", "-", "+", "*", "/", "&", "|", "!", "<", ">", "(",
                                    ")"]
+    numeric_var_types = [VariableTypes.INT, VariableTypes.LONG, VariableTypes.DOUBLE,
+                         VariableTypes.DATE]
 
     def analyse_model(self, model, config):
         variable_names = []
@@ -28,13 +29,13 @@ class ModelAnalyser:
             if transition.guard is not None:
                 guards.append(transition.guard.guard_string)
         interval_dict = {}
-        numeric_var_types = [VariableTypes.INT, VariableTypes.LONG, VariableTypes.DOUBLE,
-                             VariableTypes.DATE]
         for var_name in var_names:
-            if model.get_variable_by_name(var_name).type in numeric_var_types:
+            if model.get_variable_by_name(var_name).type in self.numeric_var_types:
                 interval_dict[var_name] = []
+
         for guard in guards:
             self.analyse_guard_intervals(guard, var_names, model, interval_dict)
+
         for key in interval_dict.keys():
             interval_list = list(dict.fromkeys(interval_dict[key]))
             variable_type = model.get_variable_by_name(key).type
@@ -46,8 +47,7 @@ class ModelAnalyser:
                     interval_list_with_parsed_numbers.append((interval[0], float(interval[1])))
                 elif variable_type == VariableTypes.DATE:
                     interval_list_with_parsed_numbers.\
-                        append((interval[0], QDateTime.fromString(interval[1][1:-1],
-                                                                  "yyyy-MM-ddThh:mm:ss").
+                        append((interval[0], QDateTime.fromString(interval[1][1:-1], "yyyy-MM-ddThh:mm:ss").
                                 toSecsSinceEpoch()))
                 else:
                     interval_list_with_parsed_numbers.append(interval)
@@ -60,12 +60,10 @@ class ModelAnalyser:
                 sem_info.intervals = interval_dict[key]
 
     def analyse_guard_intervals(self, guard_string, var_names, model, interval_dict):
-        numeric_var_types = [VariableTypes.INT, VariableTypes.LONG, VariableTypes.DOUBLE,
-                             VariableTypes.DATE]
         if "<" in guard_string or ">" in guard_string:
             for var_name in var_names:
                 var = model.get_variable_by_name(var_name)
-                if var.type in numeric_var_types:
+                if var.type in self.numeric_var_types:
                     if var_name in guard_string:
                         processed_guard = guard_string
                         for other_variable_name in var_names:
@@ -186,7 +184,7 @@ class ModelAnalyser:
         for guard in guards:
             self.analyse_guard(guard, variable_names, config, model)
         config.remove_duplicate_variable_values()
-        config.configure_model(model)
+        config.configure_variables_and_transitions(model)
 
     def analyse_guard(self, guard, variable_names, config, model):
         for variable_name in variable_names:
