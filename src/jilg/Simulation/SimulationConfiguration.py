@@ -2,6 +2,10 @@ import datetime
 from src.jilg.Other.Global import print_summary_global
 from src.jilg.Other import Global
 
+'''
+This class is used to store all configuration options regarding the simulation.
+'''
+
 
 class SimulationConfiguration:
     sim_strategy: str
@@ -85,7 +89,7 @@ class SimulationConfiguration:
 
         self.values_in_origin_event = Global.standard_values_in_origin_event
         self.duplicates_with_invisible_trans = Global.standard_duplicates_with_invisible_trans
-        self.include_invisible_transitions_in_log =\
+        self.include_invisible_transitions_in_log = \
             Global.standard_include_invisible_transitions_in_log
 
         self.perform_trace_estimation = Global.standard_perform_trace_estimation

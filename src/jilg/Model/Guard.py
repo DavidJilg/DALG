@@ -1,5 +1,9 @@
 from src.jilg.Other.Global import print_summary_global
 
+'''
+An instance of this class is used for every guard in the internal model representation. 
+'''
+
 
 class Guard:
     name: str

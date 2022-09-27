@@ -7,6 +7,11 @@ from src.jilg.Model.Model import Model
 from src.jilg.Other.Global import VariableTypes
 from src.jilg.Other.Global import print_summary_global
 
+'''
+This class is used to generate variable values if a transition writes to a variable during the
+simulation.
+'''
+
 
 class ValueGenerator:
     model: Model

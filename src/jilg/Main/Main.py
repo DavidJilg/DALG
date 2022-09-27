@@ -74,7 +74,8 @@ class Main:
         if comand_line_mode:
             self.run_command_line_mode(write_event_logs)
         else:
-            self.thread = threading.Thread(target=self.control_simulation_thread, args=[gui_lock], daemon=True)
+            self.thread = threading.Thread(target=self.control_simulation_thread, args=[gui_lock],
+                                           daemon=True)
             self.sim_stop = False
             self.thread.start()
 
@@ -86,7 +87,8 @@ class Main:
                     sim_status = self.simulation.sim_status
 
                 print("\nCurrent simulation status:")
-                print("    Nr. of current event logs: {logs}".format(logs=str(sim_status.nr_of_current_logs)))
+                print("    Nr. of current event logs: {logs}".format(
+                    logs=str(sim_status.nr_of_current_logs)))
                 print("    Nr. of current event log traces: {traces}"
                       .format(traces=str(sim_status.nr_of_current_traces)))
                 if self.config.simulation_config.sim_strategy in ["random_exploration", "all"]:

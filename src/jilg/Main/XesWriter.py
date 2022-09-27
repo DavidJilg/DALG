@@ -6,6 +6,11 @@ import numpy as np
 
 from src.jilg.Other import Global
 
+'''
+This class is used to export the generated synthetic event log to an eXtensible Event Stream (XES)
+file.
+'''
+
 
 class XesWriter:
     def write_event_logs_to_xes_file(self, output_dir, event_logs, write_to_single_file,

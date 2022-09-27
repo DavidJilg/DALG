@@ -3,6 +3,10 @@ from PySide6.QtCore import QDateTime
 from src.jilg.Other.Global import VariableTypes
 from src.jilg.Other.Global import print_summary_global
 
+'''
+This class is used to represent events in the generated event log.
+'''
+
 
 class Event:
     name: str
@@ -24,10 +28,12 @@ class Event:
         self.from_invisible_transition = invisible
         for variable in model.variables:
             if variable.has_current_value and not variable.semantic_information.trace_variable:
-                if variable.original_name in model.get_place_or_transition_by_id(trans_id).config.included_vars:
+                if variable.original_name in model.get_place_or_transition_by_id(
+                        trans_id).config.included_vars:
                     if variable.type == VariableTypes.DATE:
                         try:
-                            date = (QDateTime.fromSecsSinceEpoch(int(variable.value)).toPython()).isoformat()
+                            date = (QDateTime.fromSecsSinceEpoch(
+                                int(variable.value)).toPython()).isoformat()
                         except:
                             date = "2000-01-01T00:00:00+00:00"
                         self.variables.append((variable.original_name, date,
@@ -37,10 +43,12 @@ class Event:
                             self.variables.append((variable.original_name,
                                                    round(variable.value,
                                                          variable.semantic_information.precision),
-                                                   self.get_xml_variable_type_string(variable.type)))
+                                                   self.get_xml_variable_type_string(
+                                                       variable.type)))
                         else:
                             self.variables.append((variable.original_name, variable.value,
-                                                   self.get_xml_variable_type_string(variable.type)))
+                                                   self.get_xml_variable_type_string(
+                                                       variable.type)))
 
     def get_xml_variable_type_string(self, var_type):
         if var_type == VariableTypes.DATE:

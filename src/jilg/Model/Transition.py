@@ -5,16 +5,24 @@ from src.jilg.Other.Global import print_summary_global
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 from src.jilg.Model.MilpSolver import MilpSolver
 
+'''
+This class is used to represent all transitions of the internal model representation.
+'''
+
 
 class Transition:
     name: str
     id: str
+
+    # Currently unused information that is often present in PNML files.
     pos_x: float
     pos_y: float
     dim_x: float
     dim_y: float
     tool_specific_info: Element
     fill_color: str
+    # ---------------------------
+
     guard: Guard
     inputs: list
     outputs: list

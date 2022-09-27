@@ -11,6 +11,18 @@ from src.jilg.Model.Place import Place
 from src.jilg.Model.Transition import Transition
 from src.jilg.Model.Variable import Variable
 
+'''
+This class is used to parse PNML models to the internal model representation contained in
+src/jilg/Model. The read_pnml method reads a PNML file from the specified filepath and returns an
+instance of the Model class as well as warnings that occurred during the parsing. If an exception
+occurs during the parsing of the model file, "None" and the exception are returned.
+
+Note: There are certain restriction regarding what variable names are allowed in a PNML model 
+used with DALG. For example all the logical operators used in guard strings are not allowed to 
+appear in variable names. In order to still  allow DALG to generate data using models with 
+invalid variable names, the PnmlReader replaces invalid variable names with temporary valid 
+names (for example "replacement_name1"). '''
+
 
 class PnmlReader:
     undefined_id_count: int
@@ -415,8 +427,9 @@ class PnmlReader:
                     arc_type = arc_type_element[0].text
                 else:
                     arc_type = "undefined"
-                model_obj.arcs.append(Arc(name, arc_id, source, target, arc_type, tool_specific_info,
-                                          model_obj))
+                model_obj.arcs.append(
+                    Arc(name, arc_id, source, target, arc_type, tool_specific_info,
+                        model_obj))
 
     def add_final_marking(self, model_obj, element, marking_id):
         valid = True

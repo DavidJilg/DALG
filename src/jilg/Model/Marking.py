@@ -1,5 +1,9 @@
 from src.jilg.Other.Global import print_summary_global
 
+'''
+An instance of this class is used for every initial, current, and final marking in the internal
+model representation. 
+'''
 
 class Marking:
     name: str

@@ -27,6 +27,12 @@ class Operators(Enum):
     NONE = ""
 
 
+'''
+This class is used to determine if the current status of a model (variable values) satisfy a guard
+string. Additionally it is used to determine if the preconditions of a variable dependency are met.
+'''
+
+
 class MilpSolver:
     operator_values = [">", "<", "-", "+", "*", "/", "&&", "||", "==", "!=", "<=", ">="]
     operators_last = [Operators.AND, Operators.OR, Operators.EQUAL, Operators.NOT_EQUAL]
@@ -73,12 +79,12 @@ class MilpSolver:
             if left_bracket_index == 0:
                 left_string = "("
             else:
-                left_string = string[0:left_bracket_index+1]
-            if right_bracket_index == len(string)-1:
+                left_string = string[0:left_bracket_index + 1]
+            if right_bracket_index == len(string) - 1:
                 right_string = ")"
             else:
                 right_string = string[right_bracket_index:]
-            replacement_part = string[left_bracket_index+1: right_bracket_index]
+            replacement_part = string[left_bracket_index + 1: right_bracket_index]
 
         else:
             replacement_part = string
@@ -86,7 +92,7 @@ class MilpSolver:
 
         if "!=" in replacement_part:
             replacement_part = true_string
-            return left_string+replacement_part+right_string
+            return left_string + replacement_part + right_string
         else:
             replacement_part = false_string
             return left_string + replacement_part + right_string

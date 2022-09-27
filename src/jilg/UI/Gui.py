@@ -52,6 +52,11 @@ class EventLogWriter(QRunnable):
         self.main.write_event_logs(self.main.event_logs)
 
 
+'''
+This class is passed between the main thread/simulation thread and the gui.
+'''
+
+
 class GuiUpdateInformation:
     sim_status: SimStatus
     sim_percentage: float
@@ -60,7 +65,8 @@ class GuiUpdateInformation:
     errors_occurred: bool
     errors: str
 
-    def __init__(self, sim_status=SimStatus(), sim_percentage=0.0, nr_of_total_traces=0, sim_strategy="", errors="",
+    def __init__(self, sim_status=SimStatus(), sim_percentage=0.0, nr_of_total_traces=0,
+                 sim_strategy="", errors="",
                  errors_occurred=False):
         self.sim_status = copy(sim_status)
         self.sim_percentage = sim_percentage
@@ -75,6 +81,11 @@ class GuiUpdateInformation:
 
 class WorkerSignals(QObject):
     sim_status = Signal(GuiUpdateInformation)
+
+
+'''
+This class updates the gui with the current status of the simulation.
+'''
 
 
 class SimStatusReporter(QRunnable):
@@ -118,7 +129,8 @@ class SimStatusReporter(QRunnable):
                 errors_occurred = self.main.sim_exit_with_errors
                 errors = self.main.errors
             if errors_occurred:
-                self.signals.sim_status.emit(GuiUpdateInformation(errors=errors, errors_occurred=True))
+                self.signals.sim_status.emit(
+                    GuiUpdateInformation(errors=errors, errors_occurred=True))
                 break
             if sim_status.simulation_ended:
                 break
@@ -128,27 +140,30 @@ class SimStatusReporter(QRunnable):
                 percentage = 100 * (nr_of_current_traces / self.total_traces)
                 if percentage < 1:
                     percentage = 1
-                self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
-                                                                  nr_of_total_traces=nr_of_current_traces,
-                                                                  sim_strategy=self.sim_strat))
+                self.signals.sim_status.emit(
+                    GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                         nr_of_total_traces=nr_of_current_traces,
+                                         sim_strategy=self.sim_strat))
             elif self.sim_strat == "random_exploration" or self.sim_strat == "all":
                 nr_of_current_traces = sim_status.nr_of_current_traces
                 if not sim_status.trace_estimation_running:
                     percentage = 0
                 else:
                     if sim_status.nr_of_estimated_traces != 0:
-                        percentage = 100 * (nr_of_current_traces / sim_status.nr_of_estimated_traces)
+                        percentage = 100 * (
+                                nr_of_current_traces / sim_status.nr_of_estimated_traces)
                     else:
                         percentage = 100 * (nr_of_current_traces /
                                             self.main.config.simulation_config.number_of_traces)
                     if percentage < 1:
                         percentage = 1
 
-                self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
-                                                                  nr_of_total_traces=nr_of_current_traces,
-                                                                  sim_strategy=self.sim_strat))
+                self.signals.sim_status.emit(
+                    GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                         nr_of_total_traces=nr_of_current_traces,
+                                         sim_strategy=self.sim_strat))
 
-        # Sim ended
+        # Simulation has ended
         if self.sim_strat == "random":
             if self.sim_stop:
                 nr_of_current_traces = sim_status.nr_of_current_traces
@@ -158,9 +173,10 @@ class SimStatusReporter(QRunnable):
             percentage = 100 * (nr_of_current_traces / self.total_traces)
             if percentage < 1:
                 percentage = 1
-            self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
-                                                              nr_of_total_traces=nr_of_current_traces,
-                                                              sim_strategy=self.sim_strat))
+            self.signals.sim_status.emit(
+                GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                     nr_of_total_traces=nr_of_current_traces,
+                                     sim_strategy=self.sim_strat))
         elif self.sim_strat == "random_exploration" or self.sim_strat == "all":
             nr_of_current_traces = sim_status.nr_of_current_traces
             if not sim_status.trace_estimation_running:
@@ -174,9 +190,16 @@ class SimStatusReporter(QRunnable):
                 if percentage < 1:
                     percentage = 1
 
-            self.signals.sim_status.emit(GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
-                                                              nr_of_total_traces=nr_of_current_traces,
-                                                              sim_strategy=self.sim_strat))
+            self.signals.sim_status.emit(
+                GuiUpdateInformation(sim_percentage=percentage, sim_status=sim_status,
+                                     nr_of_total_traces=nr_of_current_traces,
+                                     sim_strategy=self.sim_strat))
+
+
+'''
+This class stores references to all input fields of the widgets used for inputting the 
+semantic information for the variables.
+'''
 
 
 class VariableInput:
@@ -211,6 +234,12 @@ class VariableInput:
         self.self_deviation_input2 = self_deviation_input2
 
 
+'''
+This class stores references to all input fields of the widgets used for inputting the 
+semantic information for the transitions.
+'''
+
+
 class TransitionInput:
     transition: Transition
 
@@ -239,6 +268,11 @@ class TransitionInput:
         self.variance_input = variance_input
         self.max_variance_input = max_variance_input
         self.time_intervals_input = time_intervals_input
+
+
+'''
+This class runs the gui of DALG.
+'''
 
 
 class MainGui:
@@ -324,7 +358,8 @@ class MainGui:
         ui = self.window.ui
         widgets = [ui.avg_trans_delay, ui.days, ui.hours_min_sec,
                    ui.delay_time_delay_maximum,
-                   ui.lead_time_delay_maximum, ui.delay_time_delay_minimum, ui.lead_time_delay_minimum,
+                   ui.lead_time_delay_maximum, ui.delay_time_delay_minimum,
+                   ui.lead_time_delay_minimum,
                    ui.time_delay_sd,
                    ui.lead_time_sd, ui.inlcude_values_in_origin_event_input,
                    ui.include_variables_in_origin_label, ui.include_invisible_transitions]
@@ -332,8 +367,10 @@ class MainGui:
         for widget in widgets:
             widget.move(widget.x() - 3, widget.y() + 8)
         ui.lead_time_sd.move(ui.lead_time_sd.x(), ui.lead_time_sd.y() - 7)
-        ui.lead_time_delay_minimum.move(ui.lead_time_delay_minimum.x(), ui.lead_time_delay_minimum.y() - 7)
-        ui.lead_time_delay_maximum.move(ui.lead_time_delay_maximum.x(), ui.lead_time_delay_maximum.y() - 7)
+        ui.lead_time_delay_minimum.move(ui.lead_time_delay_minimum.x(),
+                                        ui.lead_time_delay_minimum.y() - 7)
+        ui.lead_time_delay_maximum.move(ui.lead_time_delay_maximum.x(),
+                                        ui.lead_time_delay_maximum.y() - 7)
 
         ui.avg_trans_lead_days_input.move(ui.avg_trans_lead_days_input.x() - 3,
                                           ui.avg_trans_lead_days_input.y())
@@ -342,7 +379,8 @@ class MainGui:
         labels = self.window.findChildren(QLabel)
         for label in labels:
             label.move(label.x(), label.y() + 2)
-        ui.include_variables_in_origin_label.move(ui.include_variables_in_origin_label.x(), ui.include_variables_in_origin_label.y() - 1)
+        ui.include_variables_in_origin_label.move(ui.include_variables_in_origin_label.x(),
+                                                  ui.include_variables_in_origin_label.y() - 1)
         ui.general_config.setFixedHeight(180)
         self.app.setStyleSheet("QGroupBox{font-size: 11pt;}"
                                "QLabel{font-size: 11pt;}"
@@ -439,16 +477,20 @@ class MainGui:
         else:
             if update_info.sim_strategy == "random":
                 self.window.ui.progressBar.setValue(update_info.sim_percentage)
-                self.window.ui.nr_of_generated_logs_label.setText(str(update_info.sim_status.nr_of_current_logs))
-                self.window.ui.nr_of_generated_traces_label.setText(str(update_info.nr_of_total_traces))
+                self.window.ui.nr_of_generated_logs_label.setText(
+                    str(update_info.sim_status.nr_of_current_logs))
+                self.window.ui.nr_of_generated_traces_label.setText(
+                    str(update_info.nr_of_total_traces))
             elif update_info.sim_strategy in ["random_exploration", "all"]:
                 if not update_info.sim_status.trace_estimation_running:
                     self.window.ui.sim_status_label.setText("Trace estimation running!")
                 else:
                     self.window.ui.sim_status_label.setText("Trace generation running!")
                 self.window.ui.progressBar.setValue(update_info.sim_percentage)
-                self.window.ui.nr_of_generated_logs_label.setText(str(update_info.sim_status.nr_of_current_logs))
-                self.window.ui.nr_of_generated_traces_label.setText(str(update_info.nr_of_total_traces))
+                self.window.ui.nr_of_generated_logs_label.setText(
+                    str(update_info.sim_status.nr_of_current_logs))
+                self.window.ui.nr_of_generated_traces_label.setText(
+                    str(update_info.nr_of_total_traces))
                 try:
                     sim_status5 = int(update_info.sim_status.nr_of_estimated_traces)
                     self.window.ui.nr_of_possible_traces_label.setText(str(sim_status5))
@@ -1247,7 +1289,7 @@ class MainGui:
             other_arguments_dict = {"minimum": var_config.min,
                                     "maximum": var_config.max,
                                     "mean": var_input.distributions_mean_input.
-                                    dateTime().toSecsSinceEpoch(),
+                                        dateTime().toSecsSinceEpoch(),
                                     "standard_deviation": self.get_seconds_from_days_and_QTimeEdit(
                                         var_input.distributions_sd_input[0],
                                         var_input.distributions_sd_input[1])}

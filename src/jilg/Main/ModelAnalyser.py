@@ -5,6 +5,15 @@ from PySide6.QtCore import QDateTime
 
 from src.jilg.Other.Global import VariableTypes
 
+'''
+This class is used to analyse the guard conditions and identify valid values and intervals for the
+variables that can be presented to the user to help him when he specifies the semantic information.
+
+Consider the following exemplary guard string: "cancer_type == 'Lymphoma'"
+In this case the ModelAnalyser would determine that 'Lymphoma' is a valid value for the variable
+cancer_type.
+'''
+
 
 class ModelAnalyser:
     search_stop_operators_chars = [">", "<", "-", "+", "*", "/", "&", "|", "!", "<", ">", "(",
@@ -46,8 +55,9 @@ class ModelAnalyser:
                 elif variable_type == VariableTypes.DOUBLE:
                     interval_list_with_parsed_numbers.append((interval[0], float(interval[1])))
                 elif variable_type == VariableTypes.DATE:
-                    interval_list_with_parsed_numbers.\
-                        append((interval[0], QDateTime.fromString(interval[1][1:-1], "yyyy-MM-ddThh:mm:ss").
+                    interval_list_with_parsed_numbers. \
+                        append((interval[0],
+                                QDateTime.fromString(interval[1][1:-1], "yyyy-MM-ddThh:mm:ss").
                                 toSecsSinceEpoch()))
                 else:
                     interval_list_with_parsed_numbers.append(interval)

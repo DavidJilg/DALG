@@ -9,6 +9,10 @@ DALG_VERSION = "1.3.1"
 
 test_files_path = "../../resources/test_files/"  # relative path from test classes (src/jilg/Tests)
 
+'''
+Standard values used on startup of DALG when the user has not yet configured the options.
+'''
+
 standard_include_partial_traces = False
 standard_sim_strategy = "random"
 standard_number_of_traces = 1

@@ -9,6 +9,14 @@ from src.jilg.Model.SemanticInformation import SemanticInformation
 from src.jilg.Simulation.SimulationConfiguration import SimulationConfiguration
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 
+'''
+An instance of this class is used to set and access all the configuration options during 
+runtime. It, therefore, also contains instances of the SemanticConfiguration, 
+TransitionConfiguration, and SimulationConfiguration classed that contain specialized 
+configuration options. The class also provides methods to read/write the configuration from/to a 
+Json file.
+'''
+
 
 class Configuration:
     model_file_path: str
@@ -118,7 +126,7 @@ class Configuration:
                                'min_trace_length': self.simulation_config.min_trace_length,
                                'max_loop_iterations_markings': self.simulation_config.max_loop_iterations,
                                'max_loop_iterations_transitions': self.simulation_config
-                               .max_loop_iterations_transitions,
+                                   .max_loop_iterations_transitions,
                                'max_trace_duplicates': self.simulation_config.max_trace_duplicates,
                                'duplicates_with_data': self.simulation_config.duplicates_with_data_perspective,
                                'only_ending_traces': self.simulation_config.only_ending_traces,
@@ -144,9 +152,9 @@ class Configuration:
                                'allow_duplicate_trace_names':
                                    self.simulation_config.allow_duplicate_trace_names,
                                'model_has_no_increasing_loop': self.simulation_config.
-                               model_has_no_increasing_loop,
+                                   model_has_no_increasing_loop,
                                'include_partial_traces': self.simulation_config.
-                               include_partial_traces,
+                                   include_partial_traces,
                                "values_in_origin_event":
                                    self.simulation_config.values_in_origin_event,
                                "utc_offset": self.simulation_config.utc_offset,
@@ -160,7 +168,7 @@ class Configuration:
                                "use_only_values_from_guard_strings":
                                    self.simulation_config.use_only_values_from_guard_strings,
                                "timestamp_millieseconds": self.simulation_config.
-                               timestamp_millieseconds
+                                   timestamp_millieseconds
                                }
 
             for transition_config in self.simulation_config.transition_configs:
@@ -369,9 +377,11 @@ class Configuration:
         if "time_intervals" in trans_config_dict.keys():
             trans_config.time_intervals = trans_config_dict["time_intervals"]
         if "add_time_interval_variance" in trans_config_dict.keys():
-            trans_config.add_time_interval_variance = trans_config_dict["add_time_interval_variance"]
+            trans_config.add_time_interval_variance = trans_config_dict[
+                "add_time_interval_variance"]
         if "max_time_interval_variance" in trans_config_dict.keys():
-            trans_config.max_time_interval_variance = trans_config_dict["max_time_interval_variance"]
+            trans_config.max_time_interval_variance = trans_config_dict[
+                "max_time_interval_variance"]
         if "no_time_forward" in trans_config_dict.keys():
             trans_config.no_time_forward = trans_config_dict["no_time_forward"]
 

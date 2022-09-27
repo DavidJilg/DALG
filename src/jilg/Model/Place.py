@@ -3,6 +3,10 @@ from xml.etree.ElementTree import Element
 from src.jilg.Model.Model import Model
 from src.jilg.Other.Global import print_summary_global
 
+'''
+This class is used to represent all places of the internal model representation.
+'''
+
 
 class Place:
     name: str

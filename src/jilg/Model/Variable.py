@@ -3,6 +3,10 @@ from PySide6.QtCore import QDateTime
 from src.jilg.Model.SemanticInformation import SemanticInformation
 from src.jilg.Other.Global import print_summary_global, VariableTypes
 
+'''
+This class is used to represent all variables of the internal model representation.
+'''
+
 
 class Variable:
     has_current_value: bool
@@ -12,8 +16,8 @@ class Variable:
     pos_y: float
     height: float
     width: float
-    replacement: bool
-    original_name: str
+    replacement: bool  # variables with invalid names get a replacement name
+    original_name: str  # original name before a possible replacement
     has_been_written_to: bool
     has_initial_value: bool
 
@@ -58,7 +62,7 @@ class Variable:
             elif self.type == VariableTypes.DOUBLE:
                 self.min_value = float(min_value)
             elif self.type == VariableTypes.DATE:
-                self.min_value = QDateTime.fromString(min_value, "yyyy-MM-ddThh:mm:ss")\
+                self.min_value = QDateTime.fromString(min_value, "yyyy-MM-ddThh:mm:ss") \
                     .toSecsSinceEpoch()
             else:
                 self.min_value = min_value
@@ -70,7 +74,7 @@ class Variable:
             elif self.type == VariableTypes.DOUBLE:
                 self.max_value = float(max_value)
             elif self.type == VariableTypes.DATE:
-                self.max_value = QDateTime.fromString(max_value, "yyyy-MM-ddThh:mm:ss")\
+                self.max_value = QDateTime.fromString(max_value, "yyyy-MM-ddThh:mm:ss") \
                     .toSecsSinceEpoch()
             else:
                 self.max_value = max_value

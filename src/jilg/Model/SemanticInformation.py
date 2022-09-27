@@ -4,6 +4,11 @@ from src.jilg.Model import Distribution
 from src.jilg.Other import Global
 from src.jilg.Other.Global import print_summary_global, VariableTypes
 
+'''
+This class is used to store semantic information about variables, such as dependencies or intervals.
+Each variable gets assigned one instance of this class.
+'''
+
 
 class SemanticInformation:
     variable_name: str
@@ -129,14 +134,14 @@ class SemanticInformation:
                     else:
                         value = self.get_self_reference_value(dependency[1][1])
                 else:
-                    value = QDateTime.fromSecsSinceEpoch(dependency[1][1])\
+                    value = QDateTime.fromSecsSinceEpoch(dependency[1][1]) \
                         .toString("yyyy-MM-ddThh:mm:ss")
             else:
                 value = str(dependency[1][1])
 
             string += '"{logic}" => "\'{op}\'; \'{value}\'",\n'.format(logic=logical_expression,
-                                                                    op=operator,
-                                                                    value=value)
+                                                                       op=operator,
+                                                                       value=value)
         return string[:-2]
 
     def get_self_reference_value(self, timestamp):
@@ -170,7 +175,7 @@ class SemanticInformation:
         if model.get_variable_by_name(self.variable_name).type == VariableTypes.DATE:
             for value in self.values[0]:
                 string += '"' + str(QDateTime.fromSecsSinceEpoch(value).toPython()).replace(" ",
-                                                                                    "T") + ', '
+                                                                                            "T") + ', '
             values_part = string[:-2]
         else:
             for value in self.values[0]:
@@ -180,7 +185,7 @@ class SemanticInformation:
             values_part += " | "
             weight_part = ""
             for weight in self.values[1]:
-                weight_part += str(weight)+", "
+                weight_part += str(weight) + ", "
             return values_part + weight_part[:-2]
         else:
             return values_part

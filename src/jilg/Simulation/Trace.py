@@ -2,6 +2,10 @@ from PySide6.QtCore import QDateTime
 
 from src.jilg.Other.Global import print_summary_global, VariableTypes
 
+'''
+This class is used to represent the traces in the generated event log.
+'''
+
 
 class Trace:
     name: str

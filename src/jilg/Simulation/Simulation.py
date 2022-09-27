@@ -41,7 +41,8 @@ class SimStatus:
     simulation_ended: bool
     trace_estimation_running: bool
 
-    def __init__(self, nr_logs=0, nr_traces=0, sim_ended=False, nr_estimation_traces=0, estimation_running=False):
+    def __init__(self, nr_logs=0, nr_traces=0, sim_ended=False, nr_estimation_traces=0,
+                 estimation_running=False):
         self.nr_of_current_logs = nr_logs
         self.nr_of_current_traces = nr_traces
         self.nr_of_estimated_traces = nr_estimation_traces
@@ -50,6 +51,11 @@ class SimStatus:
 
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
+
+
+'''
+This class runs the simulation and, therefore, the actual generation of event logs.
+'''
 
 
 class Simulation:
@@ -694,7 +700,7 @@ class Simulation:
                 event_count += 1
         return event_count
 
-# --------------------------------------- All Traces experimental model ------------------------------------------------
+    # --------------------------------------- All Traces experimental model ------------------------------------------------
     def run_full_exploration(self):
         self.current_event_log = EventLog(self.event_log_name,
                                           self.event_log_creator)
@@ -842,7 +848,7 @@ class Simulation:
                         elif variable.type == VariableTypes.DATE:
                             var_values.values.append(
                                 QDateTime.fromString(values, "yyyy-MM-ddThh:mm:ss").
-                                toSecsSinceEpoch())
+                                    toSecsSinceEpoch())
                         elif variable.type == VariableTypes.BOOL:
                             if value in ["false", "False", "FALSE"]:
                                 var_values.values.append(False)

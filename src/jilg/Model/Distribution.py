@@ -5,6 +5,11 @@ from scipy.stats import truncnorm
 
 from src.jilg.Other.Global import print_summary_global
 
+'''
+This class is used to generate random numeric values that follow a distribution that was specified
+by the user.
+'''
+
 
 class Distribution:
     mean: float
@@ -68,9 +73,10 @@ class Distribution:
             self.has_standard_deviation = True
             if self.mean == 0:
                 self.mean = 0.0000000000000001
-            self.generator = stats.truncexpon(b=(self.maximum-self.minimum)/self.standard_deviation,
-                                              loc=self.minimum,
-                                              scale=self.standard_deviation)
+            self.generator = stats.truncexpon(
+                b=(self.maximum - self.minimum) / self.standard_deviation,
+                loc=self.minimum,
+                scale=self.standard_deviation)
 
     def get_truncated_normal(self, mean, sd, low, upper):
         return truncnorm((low - mean) / sd, (upper - mean) / sd, loc=mean, scale=sd)

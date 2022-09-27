@@ -1,5 +1,9 @@
 from src.jilg.Other import Global
 
+'''
+This class is used to store all semantic information regarding the firing of transitions.
+'''
+
 
 class TransitionConfiguration:
     transition_id: str

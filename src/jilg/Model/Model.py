@@ -3,6 +3,12 @@ from copy import deepcopy
 from src.jilg.Model.Marking import Marking
 from src.jilg.Other.Global import print_summary_global
 
+'''
+This class is used to represent the model that is currently loaded. The PnmlReader will create an
+instance of this class and of all subcomponents, e.g. places, transitions, when a model file is
+loaded.
+'''
+
 
 class Model:
     name: str
@@ -26,6 +32,7 @@ class Model:
         self.arcs = []
         self.current_marking = None
         self.final_markings = []
+
     def reset(self):
         self.current_marking = deepcopy(self.initial_marking)
         for variable in self.variables:
@@ -144,9 +151,9 @@ class Model:
             if token_place[0] in effected_input_places and token_place[0] in effected_output_places:
                 new_token_places.append(token_place)
             elif token_place[0] in effected_input_places:
-                new_token_places.append((token_place[0], token_place[1]-1))
+                new_token_places.append((token_place[0], token_place[1] - 1))
             elif token_place[0] in effected_output_places:
-                new_token_places.append((token_place[0], token_place[1]+1))
+                new_token_places.append((token_place[0], token_place[1] + 1))
             else:
                 new_token_places.append(token_place)
         self.current_marking.token_places = new_token_places

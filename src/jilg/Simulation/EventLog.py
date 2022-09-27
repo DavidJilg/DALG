@@ -1,5 +1,9 @@
 from src.jilg.Other.Global import print_summary_global
 
+'''
+This class is used to represent the generated event log.
+'''
+
 
 class EventLog:
     name: str
