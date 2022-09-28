@@ -58,6 +58,7 @@ class Configuration:
                     if var_config.distribution is not None:
                         variable.has_distribution = True
                     break
+
         for transition in model.transitions:
             for trans_config in self.simulation_config.transition_configs:
                 if transition.id == trans_config.transition_id:

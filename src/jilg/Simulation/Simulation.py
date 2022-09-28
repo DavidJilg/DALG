@@ -53,6 +53,22 @@ class SimStatus:
         print_summary_global(self, print_list_elements)
 
 
+class TraceEstimationResults:
+    number_of_possible_traces: int
+    valid_ending_traces: list
+    other_traces: list
+    has_loop: bool
+    partial_traces: list
+
+    def print_summary(self, print_list_elements=False):
+        print_summary_global(self, print_list_elements)
+
+    def __init__(self):
+        self.valid_ending_traces = []
+        self.other_traces = []
+        self.partial_traces = []
+
+
 '''
 This class runs the simulation and, therefore, the actual generation of event logs.
 '''
@@ -73,8 +89,7 @@ class Simulation:
     event_log_name: str
     event_log_creator: str
     value_generator: ValueGenerator
-    possible_traces: (
-        int, list, list, bool)  # number_of_possible_traces, valid_ending_traces, other_traces, loop
+    possible_traces: TraceEstimationResults
     sim_status: SimStatus
     thread_stop: bool
     exit_with_errors: bool
@@ -151,6 +166,7 @@ class Simulation:
             self.errors = str(traceback.format_exc())
 
     def calculate_possible_traces(self, model):
+        estimation_result = TraceEstimationResults()
         model_copy = deepcopy(model)
         valid_traces = []
         other_traces = []
@@ -159,10 +175,13 @@ class Simulation:
                                         [], [], [])
         self.sim_status.trace_estimation_running = True
         if self.config.include_partial_traces:
-            return len(valid_traces) + len(other_traces) + len(partial_traces), valid_traces, \
-                   other_traces, partial_traces
-        else:
-            return len(valid_traces) + len(other_traces), valid_traces, other_traces
+            estimation_result.partial_traces = partial_traces
+
+        estimation_result.number_of_possible_traces = len(valid_traces) + len(other_traces)\
+                                                      + len(partial_traces)
+        estimation_result.valid_ending_traces = valid_traces
+        estimation_result.other_traces = other_traces
+        return estimation_result
 
     def recursive_trace_estimation(self, valid_traces, other_traces, partial_traces, model,
                                    current_trace, current_trace_seen_markings,
@@ -304,9 +323,9 @@ class Simulation:
             if self.config.perform_trace_estimation:
                 self.possible_traces = self.calculate_possible_traces(self.model)
                 if self.config.only_ending_traces:
-                    nr_of_possible_traces = len(self.possible_traces[1])
+                    nr_of_possible_traces = len(self.possible_traces.valid_ending_traces)
                 else:
-                    nr_of_possible_traces = self.possible_traces[0]
+                    nr_of_possible_traces = self.possible_traces.number_of_possible_traces
                 if nr_of_possible_traces == 0:
                     no_traces_possible = True
                     raise Exception
@@ -709,9 +728,9 @@ class Simulation:
         try:
             self.possible_traces = self.calculate_possible_traces(self.model)
             if self.config.only_ending_traces:
-                nr_of_possible_traces = len(self.possible_traces[1])
+                nr_of_possible_traces = len(self.possible_traces.valid_ending_traces)
             else:
-                nr_of_possible_traces = self.possible_traces[0]
+                nr_of_possible_traces = self.possible_traces.number_of_possible_traces
             if nr_of_possible_traces == 0:
                 no_traces_possible = True
                 raise Exception
@@ -729,8 +748,8 @@ class Simulation:
                 variable_values.append(variable_values_objs[-1].combined_values)
                 variable_names.append(variable.name)
             combinations = list(itertools.product(*variable_values))
-            valid_traces = self.possible_traces[1]
-            other_traces = self.possible_traces[2]
+            valid_traces = self.possible_traces.valid_ending_traces
+            other_traces = self.possible_traces.other_traces
             variables = self.get_variables()
             milp_solver = MilpSolver()
             traces = valid_traces

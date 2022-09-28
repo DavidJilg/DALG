@@ -114,10 +114,10 @@ class Main:
             with self.simulation.thread_status_lock:
                 self.event_logs = self.simulation.event_logs
             if write_event_logs and self.event_logs:
-                print("\nWriting even log/traces that have been generated so far to {dir}."
+                print("\nWriting event log/traces that have been generated so far to {dir}."
                       .format(dir=self.config.output_directory_path))
                 self.write_event_logs(self.simulation.event_logs)
-                print("\nEvent logs written to output directory!")
+                print("\nUnfinished event logs written to output directory!")
 
         except:
             print("\nThe following exception occurred during the simulation!")

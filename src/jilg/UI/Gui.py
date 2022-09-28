@@ -114,8 +114,8 @@ class SimStatusReporter(QRunnable):
     @Slot()
     def run(self):
         self.sim_stop = False
-        self.main.run_simulation(True, True,
-                                 self.thread_lock)
+        self.main.run_simulation(write_event_logs=True, comand_line_mode=False,
+                                 gui_lock=self.thread_lock)
         while True:
             time.sleep(0.1)
             with self.gui.gui_update_thread_lock:
