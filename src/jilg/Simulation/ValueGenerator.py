@@ -82,7 +82,7 @@ class ValueGenerator:
                 value = variable.value - op_value
             elif operator == "/":
                 value = variable.value / op_value
-            else:  # *
+            else:  # "*"
                 value = variable.value * op_value
             if variable.type in [VariableTypes.INT, VariableTypes.LONG, VariableTypes.DATE]:
                 value = round(value)
