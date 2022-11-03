@@ -7,15 +7,13 @@ import time
 import traceback
 import webbrowser as wb
 from copy import copy
-
 from PySide6.QtCore import Signal, QRunnable, Slot, QThreadPool, QObject, QTime, QDateTime, QFile, \
     QLocale
 from PySide6.QtGui import QKeySequence, Qt, QIcon
-from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QLabel, \
     QVBoxLayout, QLineEdit, QPlainTextEdit, QRadioButton, QSpinBox, \
     QComboBox, QDoubleSpinBox, QDateTimeEdit, QCheckBox, QTimeEdit, QPushButton, \
-    QDialogButtonBox, QWidget
+    QDialogButtonBox, QWidget, QDialog
 from dateutil.parser import parse
 
 from src.jilg.Main.Configuration import Configuration
@@ -30,7 +28,14 @@ from src.jilg.Other.Global import VariableTypes, print_summary_global
 from src.jilg.Simulation.Simulation import Weekday, SimStatus
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 from src.jilg.Simulation.ValueGenerator import ValueGenerator
-from src.jilg.UI.MainWindow import Ui_MainWindow
+from src.jilg.UI.QtDesignerClasses import VariableInputBool
+from src.jilg.UI.QtDesignerClasses import VariableInputDate
+from src.jilg.UI.QtDesignerClasses import VariableInputInt
+from src.jilg.UI.QtDesignerClasses import VariableInputDouble
+from src.jilg.UI.QtDesignerClasses import VariableInputString
+from src.jilg.UI.QtDesignerClasses import TransitionsInput
+from src.jilg.UI.QtDesignerClasses.MainWindow import Ui_MainWindow
+from src.jilg.UI.QtDesignerClasses.WelcomeScreen import Ui_Dialog
 
 
 class MainWindow(QMainWindow):
@@ -290,6 +295,7 @@ class MainGui:
     transition_layout: QVBoxLayout
     sim_config_layout: QVBoxLayout
     previous_trace_estimation = 0
+    transition_widgets: list
 
     def __init__(self):
         self.app = QApplication(sys.argv)
@@ -411,23 +417,21 @@ class MainGui:
 
     def show_welcome_screen(self):
         preference_path = os.getcwd() + "/src/resources/preferences.json"
-        ui_file_path = os.getcwd() + "/src/resources/QtDesignerFiles/WelcomeScreen.ui"
-        ui_file = QFile(ui_file_path)
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        welcome_screen = loader.load(ui_file, self.window)
-        welcome_screen.setWindowIcon(QIcon(os.getcwd() + "/src/resources/img/icon.png"))
-        welcome_screen.setFixedSize(welcome_screen.size())
-        close_button_box = welcome_screen.findChild(QDialogButtonBox, "buttonBox")
+        welcome_screen = Ui_Dialog()
+        welcome_screen_dialog = QDialog()
+        welcome_screen.setupUi(welcome_screen_dialog)
+        welcome_screen_dialog.setWindowIcon(QIcon(os.getcwd() + "/src/resources/img/icon.png"))
+        welcome_screen_dialog.setFixedSize(welcome_screen_dialog.size())
+        close_button_box = welcome_screen_dialog.findChild(QDialogButtonBox, "buttonBox")
         close_button = close_button_box.button(QDialogButtonBox.Close)
         close_button.setText("Close")
-        manual_button = welcome_screen.findChild(QPushButton, "open_manual_button")
+        manual_button = welcome_screen_dialog.findChild(QPushButton, "open_manual_button")
         manual_button.clicked.connect(self.open_user_manual)
-        checkbox = welcome_screen.findChild(QCheckBox, "checkBox")
+        checkbox = welcome_screen_dialog.findChild(QCheckBox, "checkBox")
         checkbox.stateChanged.connect(
             lambda: self.change_show_welcome_screen(not checkbox.isChecked(), preference_path))
         self.change_show_welcome_screen(True, preference_path)
-        welcome_screen.exec()
+        welcome_screen_dialog.exec()
 
     def change_show_welcome_screen(self, show_welcome_screen, preference_path):
         with open(preference_path, "r") as preference_file:
@@ -620,6 +624,11 @@ class MainGui:
                     if with_config:
                         return False
                 else:
+                    if (len(self.main.model.transitions) + len(self.main.model.variables)) > 10:
+                        loading_screen = QMessageBox()
+                        loading_screen.setFixedWidth(500)
+                        loading_screen.setWindowTitle("Loading Model      ")
+                        loading_screen.show()
                     self.window.ui.loaded_model_label.setText(file_path)
                     self.main.config.model_file_path = file_path
                     self.update_gui_and_config()
@@ -629,9 +638,13 @@ class MainGui:
                     self.variable_layout.addWidget(self.window.ui.general_config_3)
                     for variable in self.main.model.variables:
                         self.add_variable_input_widget(variable)
+
                     for transition in self.main.model.transitions:
                         self.add_transition_input_widget(transition)
+
                     self.update_config_from_gui()
+                    if (len(self.main.model.transitions) + len(self.main.model.variables)) > 10:
+                        loading_screen.close()
                     if errors:
                         msg = QMessageBox()
                         msg.setIcon(QMessageBox.NoIcon)
@@ -665,14 +678,13 @@ class MainGui:
         ui = self.window.ui
         ui.actionExit.triggered.connect(lambda: self.app.exit())
         ui.actionLoad_PnmlFile.triggered.connect(lambda: self.load_pnml())
-        # ui.actionAbout.triggered.connect(lambda: self.display_about_info())
         ui.actionLoad_Configuration.triggered.connect(lambda: self.load_config())
         ui.actionSafe_Configuration.triggered.connect(lambda: self.safe_config())
-        ui.actionExit.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_Q))
-        # ui.actionAbout.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_A))
-        ui.actionLoad_PnmlFile.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_O))
-        ui.actionLoad_Configuration.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_L))
-        ui.actionSafe_Configuration.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_S))
+
+        ui.actionExit.setShortcut(QKeySequence("Ctrl+Q"))
+        ui.actionLoad_PnmlFile.setShortcut(QKeySequence("Ctrl+O"))
+        ui.actionLoad_Configuration.setShortcut(QKeySequence("Ctrl+L"))
+        ui.actionSafe_Configuration.setShortcut(QKeySequence("Ctrl+S"))
 
         ui.actionOpen_User_Manual.triggered.connect(lambda: self.open_user_manual())
         ui.actionOpen_User_Manual.setShortcut(QKeySequence(Qt.Key_F1))
@@ -1289,7 +1301,7 @@ class MainGui:
             other_arguments_dict = {"minimum": var_config.min,
                                     "maximum": var_config.max,
                                     "mean": var_input.distributions_mean_input.
-                                        dateTime().toSecsSinceEpoch(),
+                                    dateTime().toSecsSinceEpoch(),
                                     "standard_deviation": self.get_seconds_from_days_and_QTimeEdit(
                                         var_input.distributions_sd_input[0],
                                         var_input.distributions_sd_input[1])}
@@ -1589,22 +1601,19 @@ class MainGui:
             self.sim_config_layout.addWidget(widget)
 
     def add_variable_input_widget(self, variable):
-        ui_file_path = os.getcwd() + "/src/resources/QtDesignerFiles/"
         if variable.type == VariableTypes.STRING:
-            ui_file_path += "VariableInputString.ui"
+            widget_design = VariableInputString.Ui_Form()
         elif variable.type == VariableTypes.DATE:
-            ui_file_path += "VariableInputDate.ui"
+            widget_design = VariableInputDate.Ui_Form()
         elif variable.type == VariableTypes.BOOL:
-            ui_file_path += "VariableInputBool.ui"
+            widget_design = VariableInputBool.Ui_Form()
         elif variable.type == VariableTypes.DOUBLE:
-            ui_file_path += "VariableInputDouble.ui"
+            widget_design = VariableInputDouble.Ui_Form()
         else:
-            ui_file_path += "VariableInputInt.ui"
-        ui_file = QFile(ui_file_path)
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        widget = loader.load(ui_file, self.window.ui.scrollAreaWidgetContents_3)
-        # widget.setObjectName("variable_input"+str(len(self.variable_inputs)))
+            widget_design = VariableInputInt.Ui_Form()
+        widget = QWidget()
+        widget_design.setupUi(widget)
+
         widget.setFixedHeight(widget.height())
         widget.setFixedWidth(widget.width())
         widget.findChild(QLabel, name="header_label").setText(variable.original_name + " (" +
@@ -1852,78 +1861,66 @@ class MainGui:
                 var_input.initial_input2.setEnabled(False)
 
     def add_transition_input_widget(self, transition):
-        ui_file_path = os.getcwd() + "/src/resources/QtDesignerFiles/TransitionsInput.ui"
+        widget_design = TransitionsInput.Ui_Form()
+        widget = QWidget()
+        widget_design.setupUi(widget)
 
-        ui_file = QFile(ui_file_path)
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        widget = loader.load(ui_file, self.window.ui.scrollAreaWidgetContents)
         widget.setFixedHeight(widget.height())
         widget.setFixedWidth(widget.width())
         widget.findChild(QLabel, name="header_label").setText(transition.name + " (" +
                                                               transition.id + ")")
         self.transition_layout.addWidget(widget)
 
-        activity_name_input = widget.findChild(QLineEdit, name="activity_name_input")
-        weight_input = widget.findChild(QDoubleSpinBox, name="weight_input")
-        invisible_input = widget.findChild(QCheckBox, name="invisible_input")
+        activity_name_input = widget_design.activity_name_input
+        weight_input = widget_design.weight_input
+        invisible_input = widget_design.invisible_input
 
-        mean_delay_input = [widget.findChild(QSpinBox, name="avg_trans_delay_days_input"),
-                            widget.findChild(QTimeEdit, name="avg_trans_delay_time_input")]
+        mean_delay_input = [widget_design.avg_trans_delay_days_input,
+                            widget_design.avg_trans_delay_time_input]
 
-        delay_sd_input = [widget.findChild(QSpinBox, name="time_delay_sd_days_input"),
-                          widget.findChild(QTimeEdit, name="time_delay_sd_time_input")]
+        delay_sd_input = [widget_design.time_delay_sd_days_input,
+                          widget_design.time_delay_sd_time_input]
 
-        delay_min_input = [widget.findChild(QSpinBox, name="time_delay_minimum_days_input"),
-                           widget.findChild(QTimeEdit, name="time_delay_minimum_time_input")]
+        delay_min_input = [widget_design.time_delay_minimum_days_input,
+                           widget_design.time_delay_minimum_time_input]
+
         delay_min_input[1].setTime(QTime(0, 0, 0))
 
-        delay_max_input = [widget.findChild(QSpinBox, name="time_delay_maximum_days_input"),
-                           widget.findChild(QTimeEdit, name="time_delay_maximum_time_input")]
+        delay_max_input = [widget_design.time_delay_maximum_days_input,
+                           widget_design.time_delay_maximum_time_input]
 
-        lead_mean_input = [widget.findChild(QSpinBox, name="avg_trans_lead_days_input"),
-                           widget.findChild(QTimeEdit, name="avg_trans_lead_time_input")]
+        lead_mean_input = [widget_design.avg_trans_lead_days_input,
+                           widget_design.avg_trans_lead_time_input]
 
-        lead_sd_input = [widget.findChild(QSpinBox, name="time_lead_sd_days_input"),
-                         widget.findChild(QTimeEdit, name="time_lead_sd_time_input")]
+        lead_sd_input = [widget_design.time_lead_sd_days_input,
+                         widget_design.time_lead_sd_time_input]
 
-        lead_min_input = [widget.findChild(QSpinBox, name="time_lead_minimum_days_input"),
-                          widget.findChild(QTimeEdit, name="time_lead_minimum_time_input")]
+        lead_min_input = [widget_design.time_lead_minimum_days_input,
+                          widget_design.time_lead_minimum_time_input]
         lead_min_input[1].setTime(QTime(0, 0, 0))
 
-        lead_max_input = [widget.findChild(QSpinBox, name="time_lead_maximum_days_input"),
-                          widget.findChild(QTimeEdit, name="time_lead_maximum_time_input")]
+        lead_max_input = [widget_design.time_lead_maximum_days_input,
+                          widget_design.time_lead_maximum_time_input]
 
-        general_config_input = widget.findChild(QCheckBox, name="general_config_input")
+        general_config_input = widget_design.general_config_input
 
-        scroll_area = widget.findChild(QWidget, name="scroll_area_contents")
+        scroll_area = widget_design.scroll_area_contents
 
-        no_time_forwarding_input = widget.findChild(QCheckBox, name="no_time_forwarding_input")
-        variance_input = widget.findChild(QCheckBox, name="variance_input")
-        max_variance_input = widget.findChild(QSpinBox, name="max_variance_input")
-        time_intervals_input = widget.findChild(QPlainTextEdit, name="time_intervals_input")
-
+        no_time_forwarding_input = widget_design.no_time_forwarding_input
+        variance_input = widget_design.variance_input
+        max_variance_input = widget_design.max_variance_input
+        time_intervals_input = widget_design.time_intervals_input
         layout = QVBoxLayout()
         layout.setSpacing(3)
         scroll_area.setLayout(layout)
         included_vars = []
         for variable in self.main.model.variables:
-            var_widget = QWidget(scroll_area)
-            var_widget.setFixedHeight(24)
-            var_widget.setFixedWidth(243)
-            label = QLabel(var_widget)
-            label.setStyleSheet("font-size: 12pt")
-            label.setFixedWidth(141)
-            label.setFixedHeight(21)
-            label.move(10, 0)
-            check_box = QCheckBox(var_widget)
-            check_box.move(200, 0)
-
+            check_box = QCheckBox(variable.original_name, scroll_area)
+            check_box.setFixedHeight(24)
+            check_box.setFixedWidth(243)
             check_box.setChecked(True)
             included_vars.append((variable.original_name, check_box))
-            label.setText(variable.original_name + ":")
-            layout.addWidget(var_widget)
-
+            layout.addWidget(check_box)
         trans_input = TransitionInput(transition, activity_name_input, weight_input,
                                       invisible_input, mean_delay_input, delay_sd_input,
                                       delay_min_input, delay_max_input, lead_mean_input,
