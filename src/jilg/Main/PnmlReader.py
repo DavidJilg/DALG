@@ -124,21 +124,21 @@ class PnmlReader:
             if not var_needs_replacement:
                 break
             else:
-                variable_names_and_objs = []
+                variable_names_and_objs_copy = []
                 replacement_tuple = None
                 for var_tuple in variable_names_and_objs:
                     if var_replacement_name == var_tuple[0]:
                         replacement_tuple = var_tuple
                     else:
-                        variable_names_and_objs.append(var_tuple)
+                        variable_names_and_objs_copy.append(var_tuple)
 
                 replacement_tuple = ("replacement_name" + str(replacement_index),
                                      replacement_tuple[1])
                 replacement_tuple[1].original_name = replacement_tuple[1].name
                 replacement_tuple[1].name = replacement_tuple[0]
                 replacement_tuple[1].replacement = True
-                variable_names_and_objs.append(replacement_tuple)
-                variable_names_and_objs = variable_names_and_objs
+                variable_names_and_objs_copy.append(replacement_tuple)
+                variable_names_and_objs = variable_names_and_objs_copy
                 replacement_index += 1
         invalid_chars = [" '&',  '|',  '=',  '!',  '(', ')',  "]
         for operator in Operators:
@@ -211,6 +211,7 @@ class PnmlReader:
                 if trans.guard is not None:
                     if var[0] in trans.guard.guard_string:
                         trans.guard.guard_string = trans.guard.guard_string.replace(var[0], var[1])
+        print("End")
 
     def check_model_conformance(self, model_obj):
         if len(model_obj.places) < 1:
