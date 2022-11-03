@@ -211,7 +211,6 @@ class PnmlReader:
                 if trans.guard is not None:
                     if var[0] in trans.guard.guard_string:
                         trans.guard.guard_string = trans.guard.guard_string.replace(var[0], var[1])
-        print("End")
 
     def check_model_conformance(self, model_obj):
         if len(model_obj.places) < 1:
