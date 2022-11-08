@@ -40,6 +40,7 @@ class PnmlReader:
         self.warnings = []
 
     def read_pnml(self, path):
+        self.__init__()
         try:
             model_obj, net = self.setup_model(path)
 
