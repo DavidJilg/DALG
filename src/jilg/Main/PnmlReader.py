@@ -233,6 +233,12 @@ class PnmlReader:
                 if transition.guard.guard_string == "" or transition.guard.guard_string is None:
                     self.warnings.append("Transition with the id '{id}' has a invalid guard!"
                                          .format(id=transition.id))
+                for variable in model_obj.variables:
+                    if variable.name + "'" in transition.guard.guard_string:
+                        self.warnings.append("Transition with the id '{id}' has a guard that"
+                                             " contains Prime Variables. These type of guards are"
+                                             " currently not supported!"
+                                             .format(id=transition.id))
 
         if len(model_obj.final_markings) < 1:
             self.warnings.append("The model has no final markings!")

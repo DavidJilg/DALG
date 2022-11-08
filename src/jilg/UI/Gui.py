@@ -669,8 +669,11 @@ class MainGui:
                         if with_config:
                             return True
             except:
+                if (len(self.main.model.transitions) + len(self.main.model.variables)) > 10:
+                    loading_screen.close()
                 self.display_error_msg(str(traceback.format_exc()),
                                        "An Error occurred while loading the model!")
+
         if with_config:
             return False
 

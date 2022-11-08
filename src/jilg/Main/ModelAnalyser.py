@@ -44,7 +44,6 @@ class ModelAnalyser:
 
         for guard in guards:
             self.analyse_guard_intervals(guard, var_names, model, interval_dict)
-
         for key in interval_dict.keys():
             interval_list = list(dict.fromkeys(interval_dict[key]))
             variable_type = model.get_variable_by_name(key).type
@@ -79,6 +78,9 @@ class ModelAnalyser:
                         for other_variable_name in var_names:
                             if other_variable_name != var_name:
                                 processed_guard = processed_guard.replace(other_variable_name, "")
+                            else:
+                                processed_guard = processed_guard.replace(other_variable_name+"'",
+                                                                          "")
                         intervals, intervals_found = self.check_for_intervals(processed_guard,
                                                                               var_name, var.type)
                         if intervals_found:
@@ -153,7 +155,7 @@ class ModelAnalyser:
                 else:
                     interval_boundry_str = guard[index] + interval_boundry_str
                     index -= 1
-            if interval_boundry_str:
+            if interval_boundry_str and not interval_boundry_str.isspace():
                 return (self.invert_operator(operator), interval_boundry_str), True
         else:  # Right
             while index < len(guard):
@@ -170,7 +172,7 @@ class ModelAnalyser:
                 else:
                     interval_boundry_str = interval_boundry_str + guard[index]
                     index += 1
-            if interval_boundry_str:
+            if interval_boundry_str and not interval_boundry_str.isspace():
                 return (operator, interval_boundry_str), True
         return None, False
 
@@ -203,6 +205,8 @@ class ModelAnalyser:
                 for other_variable_name in variable_names:
                     if other_variable_name != variable_name:
                         processed_guard.replace(other_variable_name, "")
+                    else:
+                        processed_guard = processed_guard.replace(other_variable_name + "'", "")
                 values, values_found = self.check_for_values(processed_guard, variable_name)
                 if values_found:
                     self.add_values(values, variable_name, config, model)
