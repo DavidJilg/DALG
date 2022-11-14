@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 import sys
 import threading
@@ -9,11 +10,11 @@ import webbrowser as wb
 from copy import copy
 from PySide6.QtCore import Signal, QRunnable, Slot, QThreadPool, QObject, QTime, QDateTime, QFile, \
     QLocale
-from PySide6.QtGui import QKeySequence, Qt, QIcon
+from PySide6.QtGui import QKeySequence, Qt, QIcon, QPixmap
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QLabel, \
     QVBoxLayout, QLineEdit, QPlainTextEdit, QRadioButton, QSpinBox, \
     QComboBox, QDoubleSpinBox, QDateTimeEdit, QCheckBox, QTimeEdit, QPushButton, \
-    QDialogButtonBox, QWidget, QDialog
+    QDialogButtonBox, QWidget, QDialog, QSplashScreen
 from dateutil.parser import parse
 
 from src.jilg.Main.Configuration import Configuration
@@ -54,7 +55,7 @@ class EventLogWriter(QRunnable):
 
     @Slot()
     def run(self):
-        self.main.write_event_logs(self.main.event_logs)
+        self.main.write_event_logs(self.main.simulation.event_logs)
 
 
 '''
@@ -422,15 +423,22 @@ class MainGui:
         welcome_screen.setupUi(welcome_screen_dialog)
         welcome_screen_dialog.setWindowIcon(QIcon(os.getcwd() + "/src/resources/img/icon.png"))
         welcome_screen_dialog.setFixedSize(welcome_screen_dialog.size())
-        close_button_box = welcome_screen_dialog.findChild(QDialogButtonBox, "buttonBox")
+        close_button_box = welcome_screen.buttonBox
         close_button = close_button_box.button(QDialogButtonBox.Close)
         close_button.setText("Close")
-        manual_button = welcome_screen_dialog.findChild(QPushButton, "open_manual_button")
+        manual_button = welcome_screen.open_manual_button
         manual_button.clicked.connect(self.open_user_manual)
-        checkbox = welcome_screen_dialog.findChild(QCheckBox, "checkBox")
+        checkbox = welcome_screen.checkBox
         checkbox.stateChanged.connect(
             lambda: self.change_show_welcome_screen(not checkbox.isChecked(), preference_path))
         self.change_show_welcome_screen(True, preference_path)
+        if os.name != 'nt':
+            welcome_screen.label_welcome_screen_title.setStyleSheet("font-size: 16pt")
+        else:
+            welcome_screen.label_welcome_screen_title.setStyleSheet("font-size: 20pt")
+        welcome_screen.label_5.setStyleSheet("font-size: 13pt")
+        welcome_screen.label_6.setStyleSheet("font-size: 13pt")
+        welcome_screen.label_7.setStyleSheet("font-size: 13pt")
         welcome_screen_dialog.exec()
 
     def change_show_welcome_screen(self, show_welcome_screen, preference_path):
@@ -499,6 +507,8 @@ class MainGui:
                     sim_status5 = int(update_info.sim_status.nr_of_estimated_traces)
                     self.window.ui.nr_of_possible_traces_label.setText(str(sim_status5))
                 except:
+                    Global.log_error(__file__, "Failed to convert nr_of_estimated traces to string for"
+                                                              " gui update!", traceback)
                     self.window.ui.nr_of_possible_traces_label.setText("0")
 
             if update_info.sim_status.simulation_ended:
@@ -531,7 +541,10 @@ class MainGui:
         else:
             if self.sim_stop:
                 self.sim_stop = False
-                event_logs_generated = self.main.event_logs
+                event_logs_generated = False
+                if self.main.simulation.event_logs:
+                    if self.main.simulation.event_logs[0].traces:
+                        event_logs_generated = True
                 if event_logs_generated:
                     if len(self.main.event_logs) > 1:
                         msg_string = "{x} event logs have been generated.\n" \
@@ -605,12 +618,21 @@ class MainGui:
 
         if file_path:
             try:
+                model_name = file_path.split("/")[-1]
+                pixmap = QPixmap(os.getcwd() + "/src/resources/img/loading_screen.png")
+                loading_screen = QSplashScreen(pixmap)
+                loading_screen.show()
+                loading_screen.activateWindow()
+                loading_screen.showMessage(f"Loading {model_name}\n\nVariables"
+                                           f" \nTransitions ",
+                                           alignment=Qt.AlignmentFlag.AlignCenter)
                 if self.status == Status.MODEL_LOADED:
                     self.clean_up_gui()
                 self.main.model_path = file_path
                 success, errors = self.main.initialize_model_and_config(
                     "")
                 if not success:
+                    loading_screen.close()
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Critical)
                     if with_config:
@@ -624,11 +646,6 @@ class MainGui:
                     if with_config:
                         return False
                 else:
-                    if (len(self.main.model.transitions) + len(self.main.model.variables)) > 10:
-                        loading_screen = QMessageBox()
-                        loading_screen.setFixedWidth(500)
-                        loading_screen.setWindowTitle("Loading Model      ")
-                        loading_screen.show()
                     self.window.ui.loaded_model_label.setText(file_path)
                     self.main.config.model_file_path = file_path
                     self.update_gui_and_config()
@@ -636,15 +653,31 @@ class MainGui:
                     self.status = Status.MODEL_LOADED
                     self.transition_layout.addWidget(self.window.ui.general_config_2)
                     self.variable_layout.addWidget(self.window.ui.general_config_3)
+                    var = 0
+                    len_var = len(self.main.model.variables)
+                    trans = 0
+                    len_trans = len(self.main.model.transitions)
                     for variable in self.main.model.variables:
+                        var +=1
                         self.add_variable_input_widget(variable)
+                        loading_screen.showMessage(
+                            f"Loading {model_name}\n\nVariables: {var}/{len_var}"
+                            f" \nTransitions: {trans}/{len_trans}",
+                            alignment=Qt.AlignmentFlag.AlignCenter)
+                        loading_screen.activateWindow()
 
                     for transition in self.main.model.transitions:
+                        trans += 1
                         self.add_transition_input_widget(transition)
+                        loading_screen.showMessage(
+                            f"Loading {model_name}\n\nVariables: {var}/{len_var}"
+                            f" \nTransitions: {trans}/{len_trans}",
+                            alignment=Qt.AlignmentFlag.AlignCenter)
+                        loading_screen.activateWindow()
 
                     self.update_config_from_gui()
-                    if (len(self.main.model.transitions) + len(self.main.model.variables)) > 10:
-                        loading_screen.close()
+
+                    loading_screen.close()
                     if errors:
                         msg = QMessageBox()
                         msg.setIcon(QMessageBox.NoIcon)
@@ -669,8 +702,8 @@ class MainGui:
                         if with_config:
                             return True
             except:
-                if (len(self.main.model.transitions) + len(self.main.model.variables)) > 10:
-                    loading_screen.close()
+                loading_screen.close()
+                Global.log_error(__file__, "Error occurred while loading the model!", traceback)
                 self.display_error_msg(str(traceback.format_exc()),
                                        "An Error occurred while loading the model!")
 
@@ -761,6 +794,7 @@ class MainGui:
                 try:
                     self.update_config_from_gui()
                 except:
+                    Global.log_error(__file__, "Error in update_config_from_gui()", traceback)
                     self.display_error_msg(str(traceback.format_exc()),
                                            "An Error occurred while trying to parse the"
                                            " configuration!\n"
@@ -834,6 +868,7 @@ class MainGui:
         try:
             int(ui.seed_input.text())
         except:
+            Global.log_error(__file__, "Converting random seed input to integer failed!", traceback)
             warnings.append("Random seed must be a positive whole number!")
             valid = False
         min_trace_length = self.window.ui.min_trace_length_input.value()
@@ -972,6 +1007,7 @@ class MainGui:
                                 " specified that the values should "
                                 "be used for the data generation!".format(name=var_name))
         except:
+            Global.log_error(__file__, f"Parsing values for variable {var_name} failed!", traceback)
             warnings.append("Could not parse values for variable {name}!".format(name=var_name))
         return warnings
 
@@ -980,6 +1016,7 @@ class MainGui:
         try:
             dependencies = self.parse_dependencies(var_input, var_input.variable.type)
         except:
+            Global.log_error(__file__, f"Parsing dependencies for variable {var_name} failed!", traceback)
             warnings.append(
                 "Could not parse dependencies for variable {name}!".format(name=var_name))
             dependencies = None
@@ -1029,6 +1066,7 @@ class MainGui:
         try:
             intervals = self.parse_intervals(var_input, var_input.variable.type)
         except:
+            Global.log_error(__file__, f"Parsing intervals for variable {var_name} failed!", traceback)
             warnings.append("Could not parse intervals for variable {name}!".format(name=var_name))
             intervals = None
         if intervals is not None and not only_exceptions:
@@ -1138,6 +1176,7 @@ class MainGui:
                 self.parse_time_intervals(trans_input.time_intervals_input)
                 self.check_time_intervals(trans_input.time_intervals_input.toPlainText())
             except:
+                Global.log_error(__file__, f"Parsing intervals for transition {trans_id} failed!", traceback)
                 warnings.append("Invalid time intervals for transition {id}!".format(id=trans_id))
         return warnings
 
@@ -1283,7 +1322,7 @@ class MainGui:
                 try:
                     var_config.initial_value = var_input.initial_input.dateTime().toSecsSinceEpoch()
                 except:
-                    pass
+                    Global.log_error(__file__, f"Converting initial value input to Unix Time failed!", traceback)
             var_config.has_distribution = True
             var_config.has_min = True
             var_config.has_max = True
@@ -1326,7 +1365,7 @@ class MainGui:
                     if var_input.initial_input.text() != "":
                         var_config.initial_value = var_input.initial_input.text()
                 except:
-                    pass
+                    Global.log_error(__file__, f"Reading initial value from input field failed!", traceback)
             var_config.has_distribution = False
             var_config.has_min = False
             var_config.has_max = False
@@ -1619,13 +1658,13 @@ class MainGui:
 
         widget.setFixedHeight(widget.height())
         widget.setFixedWidth(widget.width())
-        widget.findChild(QLabel, name="header_label").setText(variable.original_name + " (" +
+        widget_design.header_label.setText(variable.original_name + " (" +
                                                               str(variable.type.value.split(".")
                                                                   [-1]) + ")")
         self.variable_layout.addWidget(widget)
 
-        values_input = widget.findChild(QPlainTextEdit, name="values_input")
-        dependencies_input = widget.findChild(QPlainTextEdit, name="dependencies_input")
+        values_input = widget_design.values_input
+        dependencies_input = widget_design.dependencies_input
         dependencies_input.setPlainText(variable.semantic_information.get_dependencies_string(
             variable.type))
         values_input.setPlainText(variable.semantic_information.get_values_string(self.main.model))
@@ -1636,32 +1675,31 @@ class MainGui:
         fixed_variable_input, trace_variable_input, self_deviation_input, self_deviation_input2 = \
             (None, None, None, None, None, None, None, None, None, None, None, None, None, None,
              None, None, None)
-        gen_initial_value_input = widget.findChild(QCheckBox, name="gen_initial_value_input")
-        use_initial_value_input = widget.findChild(QCheckBox, name="use_initial_value_input")
+        gen_initial_value_input = widget_design.gen_initial_value_input
+        use_initial_value_input = widget_design.use_initial_value_input
 
-        fixed_variable_input = widget.findChild(QCheckBox, name="fixed_variable_input")
-        trace_variable_input = widget.findChild(QCheckBox, name="trace_variable_input")
+        fixed_variable_input = widget_design.fixed_variable_input
+        trace_variable_input = widget_design.trace_variable_input
 
         if variable.type == VariableTypes.BOOL:
             values_input.setPlainText('"True", "False" | 1, 1')
 
-            initial_input = widget.findChild(QRadioButton, name="initial_value_input_true")
-            initial_input2 = widget.findChild(QRadioButton, name="initial_value_input_false")
+            initial_input = widget_design.initial_value_input_true
+            initial_input2 = widget_design.initial_value_input_false
 
         elif variable.type == VariableTypes.INT or variable.type == VariableTypes.LONG:
 
-            self_deviation_input = widget.findChild(QSpinBox, name="self_deviation_input")
+            self_deviation_input = widget_design.self_deviation_input
 
-            inverse_intervals_input = widget.findChild(QCheckBox, name="inverse_intervals_input")
-            initial_input = widget.findChild(QSpinBox, name="initial_value_input")
-            min_input = widget.findChild(QSpinBox, name="minimum_value_input")
-            max_input = widget.findChild(QSpinBox, name="maximum_value_input")
-            info_used_input = widget.findChild(QComboBox, name="used_info_input")
-            distributions_input = widget.findChild(QComboBox, name="distribution_input")
-            distributions_mean_input = widget.findChild(QDoubleSpinBox,
-                                                        name="distribution_mean_input")
-            distributions_sd_input = widget.findChild(QDoubleSpinBox, name="distribution_sd_input")
-            intervals_input = widget.findChild(QPlainTextEdit, name="intervals_input")
+            inverse_intervals_input = widget_design.inverse_intervals_input
+            initial_input = widget_design.initial_value_input
+            min_input = widget_design.minimum_value_input
+            max_input = widget_design.maximum_value_input
+            info_used_input = widget_design.used_info_input
+            distributions_input = widget_design.distribution_input
+            distributions_mean_input = widget_design.distribution_mean_input
+            distributions_sd_input = widget_design.distribution_sd_input
+            intervals_input = widget_design.intervals_input
             intervals_input.setPlainText(variable.semantic_information.get_intervals_string(
                 self.main.model))
 
@@ -1675,20 +1713,19 @@ class MainGui:
             info_used_input.setCurrentIndex(0)
 
         elif variable.type == VariableTypes.DOUBLE:
-            self_deviation_input = widget.findChild(QDoubleSpinBox, name="self_deviation_input")
-            precision_input = widget.findChild(QSpinBox, name="precision_input")
+            self_deviation_input = widget_design.self_deviation_input
+            precision_input = widget_design.precision_input
             precision_input.valueChanged.connect(
                 lambda: self.change_decimal_input(var_input))
-            inverse_intervals_input = widget.findChild(QCheckBox, name="inverse_intervals_input")
-            initial_input = widget.findChild(QDoubleSpinBox, name="initial_value_input")
-            min_input = widget.findChild(QDoubleSpinBox, name="minimum_value_input")
-            max_input = widget.findChild(QDoubleSpinBox, name="maximum_value_input")
-            info_used_input = widget.findChild(QComboBox, name="used_info_input")
-            distributions_input = widget.findChild(QComboBox, name="distribution_input")
-            distributions_mean_input = widget.findChild(QDoubleSpinBox,
-                                                        name="distribution_mean_input")
-            distributions_sd_input = widget.findChild(QDoubleSpinBox, name="distribution_sd_input")
-            intervals_input = widget.findChild(QPlainTextEdit, name="intervals_input")
+            inverse_intervals_input = widget_design.inverse_intervals_input
+            initial_input = widget_design.initial_value_input
+            min_input = widget_design.minimum_value_input
+            max_input = widget_design.maximum_value_input
+            info_used_input = widget_design.used_info_input
+            distributions_input = widget_design.distribution_input
+            distributions_mean_input = widget_design.distribution_mean_input
+            distributions_sd_input = widget_design.distribution_sd_input
+            intervals_input = widget_design.intervals_input
             intervals_input.setPlainText(variable.semantic_information.get_intervals_string(
                 self.main.model))
 
@@ -1703,25 +1740,21 @@ class MainGui:
 
         elif variable.type == VariableTypes.STRING:
 
-            initial_input = widget.findChild(QLineEdit, name="initial_value_input")
+            initial_input = widget_design.initial_value_input
         elif variable.type == VariableTypes.DATE:
-            self_deviation_input = widget.findChild(QSpinBox, name="self_deviation_input_days")
-            self_deviation_input2 = widget.findChild(QTimeEdit, name="self_deviation_input_time")
+            self_deviation_input = widget_design.self_deviation_input_days
+            self_deviation_input2 = widget_design.self_deviation_input_time
 
-            inverse_intervals_input = widget.findChild(QCheckBox, name="inverse_intervals_input")
-            initial_input = widget.findChild(QDateTimeEdit, name="initial_value_input")
-            min_input = widget.findChild(QDateTimeEdit, name="minimum_value_input")
-            max_input = widget.findChild(QDateTimeEdit, name="maximum_value_input")
-            info_used_input = widget.findChild(QComboBox, name="used_info_input")
-            distributions_input = widget.findChild(QComboBox, name="distribution_input")
-            distributions_mean_input = widget.findChild(QDateTimeEdit,
-                                                        name="distribution_mean_input")
-            distributions_sd_input = [widget.findChild(QSpinBox,
-                                                       name="distribution_sd_input_days"),
-                                      widget.findChild(QTimeEdit,
-                                                       name="distribution_sd_input_time"),
-                                      ]
-            intervals_input = widget.findChild(QPlainTextEdit, name="intervals_input")
+            inverse_intervals_input = widget_design.inverse_intervals_input
+            initial_input = widget_design.initial_value_input
+            min_input = widget_design.minimum_value_input
+            max_input = widget_design.maximum_value_input
+            info_used_input = widget_design.used_info_input
+            distributions_input = widget_design.distribution_input
+            distributions_mean_input = widget_design.distribution_mean_input
+            distributions_sd_input = [widget_design.distribution_sd_input_days,
+                                      widget_design.distribution_sd_input_time,]
+            intervals_input = widget_design.intervals_input
             intervals_input.setPlainText(variable.semantic_information.get_intervals_string(
                 self.main.model))
 
@@ -1870,8 +1903,7 @@ class MainGui:
 
         widget.setFixedHeight(widget.height())
         widget.setFixedWidth(widget.width())
-        widget.findChild(QLabel, name="header_label").setText(transition.name + " (" +
-                                                              transition.id + ")")
+        widget_design.header_label.setText(f"{transition.name} ({transition.id})")
         self.transition_layout.addWidget(widget)
 
         activity_name_input = widget_design.activity_name_input
@@ -2089,11 +2121,22 @@ class MainGui:
                     model_fits, model_path = self.check_if_config_fits_model(file_path,
                                                                              self.main.model)
                     if model_fits:
+                        if model_path != self.main.model_path:
+                            msg_text = "Configuration file loaded successfully! However, the model" \
+                                       " file path in the configuration file is not the same as the" \
+                                       " path of the currently loaded model. The configuration file" \
+                                       " could be loaded correctly since all variables and transitions" \
+                                       " of the currently loaded model are present in configuration" \
+                                       " file. Please make sure that the transitions ids of both" \
+                                       " models match to avoid problems during" \
+                                       " the simulation!"
+                        else:
+                            msg_text = "Configuration file loaded successfully!"
                         self.main.config.read_config_file(file_path, self.main.model)
                         self.update_gui_from_config()
                         msg = QMessageBox()
                         msg.setIcon(QMessageBox.NoIcon)
-                        msg.setText("Configuration file loaded successfully!")
+                        msg.setText(msg_text)
                         msg.setWindowTitle("Success!")
                         msg.setButtonText(1, "Ok")
                         msg.exec()
@@ -2216,6 +2259,7 @@ class MainGui:
                         msg.setButtonText(1, "Ok")
                         msg.exec()
         except:
+            Global.log_error(__file__, f"Reading the configuration file failed!", traceback)
             self.display_error_msg(str(traceback.format_exc()),
                                    "An Error occurred while loading the configuration file!")
 
@@ -2251,13 +2295,12 @@ class MainGui:
             for sem_info in sem_infos:
                 try:
                     var_name = sem_info["variable_name"]
-                    if var_name == variable.original_name:
+                    if var_name in [variable.original_name, variable.name]:
                         var_config_found = True
                 except KeyError:
                     return False, model_path
             if not var_config_found:
                 return False, model_path
-
         for transition in model.transitions:
             trans_config_found = False
             for trans_config in trans_configs:
@@ -2269,7 +2312,7 @@ class MainGui:
                     return False, model_path
             if not trans_config_found:
                 return False, model_path
-        return True, ""
+        return True, model_path
 
     def update_gui_from_config(self):
         ui = self.window.ui
@@ -2548,7 +2591,7 @@ class MainGui:
 
     def get_var_input_by_name(self, name):
         for var_input in self.variable_inputs:
-            if var_input.variable.original_name == name:
+            if var_input.variable.original_name == name or var_input.variable.name == name:
                 return var_input
         return None
 
@@ -2568,6 +2611,8 @@ class MainGui:
                 try:
                     self.main.config.write_config_file(file_path)
                 except:
+                    Global.log_error(__file__,
+                                                    f"Saving the configuration file failed!", traceback)
                     self.display_error_msg(str(traceback.format_exc()),
                                            "An Error occurred while saving the configuration!")
             else:
@@ -2607,6 +2652,8 @@ class MainGui:
                         self.update_config_from_gui()
                         self.main.config.write_config_file(file_path)
                     except:
+                        Global.log_error(__file__,
+                                                        f"Saving the configuration file failed!", traceback)
                         self.display_error_msg(str(traceback.format_exc()),
                                                "An Error occurred while saving the configuration!")
 

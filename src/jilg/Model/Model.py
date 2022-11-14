@@ -40,6 +40,11 @@ class Model:
         for token_placement in self.current_marking.token_places:
             self.get_place_or_transition_by_id(token_placement[0]).token_count = token_placement[1]
 
+    def reset_prime_variable_values(self):
+        for variable in self.variables:
+            variable.has_nex_value = False
+            variable.next_value = []
+
     def generate_initial_values(self, gen):
         for variable in self.variables:
             variable.has_current_value = False
@@ -101,10 +106,10 @@ class Model:
                 return place
         return None
 
-    def get_enabled_transitions(self, with_probabilities, with_data):
+    def get_enabled_transitions(self, with_probabilities, with_data, value_gen):
         enabled_transitions = []
         for transition in self.transitions:
-            if transition.is_enabled(with_data):
+            if transition.is_enabled(with_data, value_gen):
                 enabled_transitions.append(transition)
 
         if with_probabilities and enabled_transitions:
@@ -139,10 +144,7 @@ class Model:
 
     def fire_transition(self, transition_id, with_data=True):
         transition = self.get_place_or_transition_by_id(transition_id)
-        if transition.is_enabled(with_data):
-            self.update_current_marking(transition.fire())
-        else:
-            print("TRIED TO FIRE TRANSITION THAT IS NOT ENABLED!")
+        self.update_current_marking(transition.fire())
 
     def update_current_marking(self, effected_ids):
         new_token_places = []

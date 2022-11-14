@@ -136,7 +136,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
 #if QT_CONFIG(tooltip)
-        self.variable_input.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Base filename of the generated event logs. If multiple event logs are created the name will be expanded with a number.</p></body></html>", None))
+        self.variable_input.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>If the above option is checked this setting let's you adjust the initial value.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(whatsthis)
         self.variable_input.setWhatsThis(QCoreApplication.translate("Form", u"<html><head/><body><p>Dies ist ein Test</p><p><br/></p></body></html>", None))

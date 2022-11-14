@@ -1,11 +1,11 @@
 import datetime
+import logging
 from enum import Enum
 from dateutil.parser import parse
 
 import pytz
 
-DALG_VERSION = "1.4.1"
-
+DALG_VERSION = "1.5.0"
 
 test_files_path = "../../resources/test_files/"  # relative path from test classes (src/jilg/Tests)
 
@@ -34,7 +34,6 @@ standard_avg_timestamp_delay = 0
 standard_timestamp_delay_sd = 1
 standard_timestamp_delay_min = 0
 standard_timestamp_delay_max = 1
-
 
 standard_avg_timestamp_lead = 0
 standard_timestamp_lead_min = 0
@@ -66,6 +65,28 @@ class VariableTypes(Enum):
     LONG = "java.lang.Long"
     STRING = "java.lang.String"
     INT = "java.lang.Integer"
+
+
+def log_error(file, msg, tracestack=None):
+    try:
+        logging.error(format_log(file, msg))
+        if tracestack is not None:
+            logging.error(format_log(file, tracestack.format_exc()))
+    except:
+        pass
+
+
+def format_log(file, msg):
+    return f"{get_file(file)}: {msg}"
+
+
+def get_file(filename):
+    if "\\" in filename:
+        return filename.split("\\")[-1].replace(".py", "")
+    elif "/" in filename:
+        return filename.split("/")[-1].replace(".py", "")
+    else:
+        return filename
 
 
 def print_summary_global(obj, print_list_elements):

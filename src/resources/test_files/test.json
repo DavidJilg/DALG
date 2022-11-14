@@ -111,6 +111,7 @@
    "semantic_information": [
       {
          "variable_name": "patient_status",
+         "variable_original_name": "patient_status",
          "has_distribution": false,
          "has_min": false,
          "has_max": false,
@@ -134,6 +135,7 @@
       },
       {
          "variable_name": "variable2",
+         "variable_original_name": "variable2",
          "has_distribution": true,
          "has_min": true,
          "has_max": true,

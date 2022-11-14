@@ -1,5 +1,9 @@
+import logging
+import traceback
+
 from PySide6.QtCore import QDateTime
 
+from src.jilg.Other import Global
 from src.jilg.Other.Global import VariableTypes
 from src.jilg.Other.Global import print_summary_global
 
@@ -35,6 +39,8 @@ class Event:
                             date = (QDateTime.fromSecsSinceEpoch(
                                 int(variable.value)).toPython()).isoformat()
                         except:
+                            Global.log_error(__file__, "Failed conversion from"
+                                                                      " seconds to QDateTime", traceback)
                             date = "2000-01-01T00:00:00+00:00"
                         self.variables.append((variable.original_name, date,
                                                self.get_xml_variable_type_string(variable.type)))

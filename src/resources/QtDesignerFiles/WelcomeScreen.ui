@@ -59,30 +59,11 @@
     <string>Do not show this screen again.</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>610</x>
-     <y>470</y>
-     <width>151</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/DavidJilg/DALG&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github Repository&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-   <property name="openExternalLinks">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QPushButton" name="open_manual_button">
    <property name="geometry">
     <rect>
-     <x>500</x>
-     <y>457</y>
+     <x>630</x>
+     <y>459</y>
      <width>111</width>
      <height>27</height>
     </rect>
@@ -154,32 +135,13 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>610</x>
-     <y>450</y>
-     <width>151</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;created by David Jilg&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-   <property name="openExternalLinks">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>370</y>
      <width>711</width>
-     <height>51</height>
+     <height>61</height>
     </rect>
    </property>
    <property name="font">
@@ -212,7 +174,7 @@
     </font>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This software allows to generate event logs that conform to the data and the control flow perspective of a provided Data Petri net. The software was developed by &lt;a href=&quot;https://github.com/DavidJilg&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;David Jilg&lt;/span&gt;&lt;/a&gt; as part of his Master Thesis &amp;quot;Generating Synthetic Procedural Multi-Perspective Electronic Healthcare Treatment Cases&amp;quot; at the &lt;a href=&quot;https://www.uni-trier.de/en/universitaet/fachbereiche-faecher/fachbereich-iv/faecher/informatikwissenschaften/professuren/wirtschaftsinformatik-2/chair&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Chair of Business Information Systems II&lt;/span&gt;&lt;/a&gt; at the &lt;a href=&quot;https://www.uni-trier.de/en/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;University of Trier&lt;/span&gt;&lt;/a&gt;. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This software allows you to generate event logs that conform to the data and the control-flow perspective of a provided Data Petri net by using the &lt;a href=&quot;https://pods4h.com/wp-content/uploads/2022/10/PODS4H_2022_paper_145_Gruger_Sample.pdf&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;SAMPLE&lt;/span&gt;&lt;/a&gt; approach. The software was originally developed by &lt;a href=&quot;https://www.linkedin.com/in/david-jilg-b43bb119b/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;David Jilg&lt;/span&gt;&lt;/a&gt; as part of his &lt;a href=&quot;http://dx.doi.org/10.13140/RG.2.2.35331.78880&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Master Thesis&lt;/span&gt;&lt;/a&gt; and is currently actively developed by researchers at the &lt;a href=&quot;https://www.uni-trier.de/en/universitaet/fachbereiche-faecher/fachbereich-iv/faecher/informatikwissenschaften/professuren/wirtschaftsinformatik-2/chair&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Chair of Business Information Systems II&lt;/span&gt;&lt;/a&gt; at the &lt;a href=&quot;https://www.uni-trier.de/en/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;University of Trier&lt;/span&gt;&lt;/a&gt;. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="textFormat">
     <enum>Qt::RichText</enum>
@@ -231,9 +193,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>205</y>
+     <y>215</y>
      <width>711</width>
-     <height>141</height>
+     <height>151</height>
     </rect>
    </property>
    <property name="font">

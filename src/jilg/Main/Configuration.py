@@ -84,7 +84,7 @@ class Configuration:
         for variable in model.variables:
             for trans_config in self.simulation_config.transition_configs:
                 trans_config.included_vars.append(variable.original_name)
-            sem_info_obj = SemanticInformation(variable.name, model)
+            sem_info_obj = SemanticInformation(variable, model)
             if variable.min_value is not None:
                 sem_info_obj.has_min = True
                 sem_info_obj.min = variable.min_value
@@ -203,6 +203,7 @@ class Configuration:
 
     def write_semantic_information(self, sem_info):
         sem_info_dict = {"variable_name": sem_info.variable_name,
+                         "variable_original_name": sem_info.original_variable_name,
                          "has_distribution": sem_info.has_distribution, "has_min": sem_info.has_min,
                          "has_max": sem_info.has_max, "dependencies": [], "values": [],
                          "intervals": [], "used_information": sem_info.used_information,
@@ -389,7 +390,7 @@ class Configuration:
         return trans_config
 
     def read_sem_info(self, sem_info, model):
-        sem_info_obj = SemanticInformation(sem_info['variable_name'], model)
+        sem_info_obj = SemanticInformation(model.get_variable_by_name(sem_info['variable_name']), model)
         sem_info_obj.precision = sem_info["precision"]
         sem_info_obj.use_initial_value = sem_info["use_initial_value"]
         sem_info_obj.generate_initial_value = sem_info["generate_initial_value"]
@@ -433,6 +434,12 @@ class Configuration:
 
         if sem_info_obj.has_distribution:
             sem_info_obj.distribution = self.initialize_distribution(sem_info["distribution"])
+
+        if "variable_original_name" in sem_info.keys():
+            sem_info_obj.variable_original_name = sem_info["variable_original_name"]
+        else:
+            sem_info_obj.variable_original_name = model.get_variable_by_name(sem_info['variable_name'])\
+                .original_name
 
         return sem_info_obj
 

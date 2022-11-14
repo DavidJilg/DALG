@@ -4,6 +4,7 @@ from src.jilg.Model.Guard import Guard
 from src.jilg.Other.Global import print_summary_global
 from src.jilg.Simulation.TransitionConfiguration import TransitionConfiguration
 from src.jilg.Model.MilpSolver import MilpSolver
+from src.jilg.Simulation.ValueGenerator import ValueGenerator
 
 '''
 This class is used to represent all transitions of the internal model representation.
@@ -30,7 +31,8 @@ class Transition:
     reads_variables: list
     invisible: bool
     config: TransitionConfiguration
-    milp_solver = MilpSolver
+    milp_solver: MilpSolver
+    value_gen: ValueGenerator
 
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
@@ -77,13 +79,13 @@ class Transition:
             places.append(place.id)
         return places
 
-    def is_enabled(self, with_data):
+    def is_enabled(self, with_data, value_gen=None):
         for input_place in self.inputs:
             tokens_needed = self.count_tokens_needed(input_place)
             if input_place.token_count < tokens_needed:
                 return False
         if with_data:
-            return self.evalute_guard()
+            return self.evalute_guard(value_gen)
         else:
             return True
 
@@ -105,9 +107,10 @@ class Transition:
             output_place.token_count += 1
         return effected_input_places, effected_output_places
 
-    def evalute_guard(self):
+    def evalute_guard(self, value_gen):
         if self.guard is not None:
             return self.milp_solver.compile_and_evaluate_string(self.guard.guard_string,
-                                                                self.reads_variables)
+                                                                self.reads_variables, self,
+                                                                value_gen)
         else:
             return True

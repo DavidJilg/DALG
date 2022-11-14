@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 import traceback
@@ -51,7 +52,10 @@ class Main:
             return True, warnings
 
     def analyse_model(self):
-        self.analyser.analyse_model(self.model, self.config)
+        try:
+            self.analyser.analyse_model(self.model, self.config)
+        except:
+            Global.log_error(__file__, "ModelAnalyser failed!", traceback)
 
     def run_simulation(self, write_event_logs, comand_line_mode=False, gui_lock=None):
         self.sim_exit_with_errors = False

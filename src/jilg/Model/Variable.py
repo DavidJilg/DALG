@@ -1,3 +1,5 @@
+from typing import List
+
 from PySide6.QtCore import QDateTime
 
 from src.jilg.Model.SemanticInformation import SemanticInformation
@@ -21,6 +23,9 @@ class Variable:
     has_been_written_to: bool
     has_initial_value: bool
 
+    has_nex_value: bool  # Used for Prime variables in guard conditions
+    next_value: List[tuple]
+
     numeric_types = [VariableTypes.INT, VariableTypes.DOUBLE, VariableTypes.LONG]
     semantic_information: SemanticInformation
 
@@ -34,6 +39,35 @@ class Variable:
         else:
             self.has_current_value = False
         self.has_been_written_to = False
+        self.has_nex_value = False
+        self.next_value = []
+
+    def get_next_value_string(self, transition):
+        if self.type in [VariableTypes.INT, VariableTypes.LONG, VariableTypes.DOUBLE]:
+            return f'{self.get_correct_next_value(transition.id)}'
+        elif self.type == VariableTypes.STRING:
+            return f'"{self.get_correct_next_value(transition.id)}"'
+        elif self.type == VariableTypes.DATE:
+            return QDateTime.fromSecsSinceEpoch(self.get_correct_next_value(transition.id)) \
+                .toString(format="yyyy-MM-ddThh:mm:ss")
+        elif self.type == VariableTypes.BOOL:
+            if self.get_correct_next_value(transition.id):
+                return "True"
+            else:
+                return "False"
+
+    def get_correct_next_value(self, transition_id):
+        for value in self.next_value:
+            if value[0] == transition_id:
+                return value[1]
+        return "NONE"
+
+    def get_next_value_transitions(self):
+        transition_ids = []
+        if self.has_nex_value:
+            for next_value in self.next_value:
+                transition_ids.append(next_value[0])
+        return transition_ids
 
     def __init__(self, name, variable_type, pos_x, pos_y, height, width, min_value, max_value,
                  value, replacement=False):
@@ -83,3 +117,4 @@ class Variable:
 
         self.replacement = replacement
         self.has_been_written_to = False
+        self.has_nex_value = False

@@ -46,21 +46,43 @@ class MilpSolver:
         self.variables = []
         self.variables_names = []
 
-    def compile_and_evaluate_string(self, guard_string, variables):
+    def compile_and_evaluate_string(self, guard_string, variables, transition=None, value_gen=None):
         self.__init__()
-        self.variables = deepcopy(variables)
         if guard_string is None:
             return True
-        guard_string = self.remove_spaces(guard_string).replace('\n', '')
+        prime_variables = []
+        for variable in variables:
+            if variable.name + "'" in guard_string:
+                prime_variables.append(variable)
+        processed_guard_string = self.replace_prime_variables(guard_string, prime_variables,
+                                                              transition, value_gen)
+
+        self.variables = deepcopy(variables)
+        processed_guard_string = self.remove_spaces(processed_guard_string).replace('\n', '')
         if guard_string == "":
             return True
-        guard_string = self.check_for_negative_numbers(guard_string)
+        processed_guard_string = self.check_for_negative_numbers(processed_guard_string)
         for variable in self.variables:
             self.variables_names.append(variable.name)
             if not variable.has_current_value:
-                if variable.name in guard_string:
-                    guard_string = self.deal_with_missing_values(guard_string, variable.name)
-        return self.evaluate_guard_string(guard_string)
+                if variable.name in processed_guard_string:
+                    processed_guard_string = self.deal_with_missing_values(processed_guard_string,
+                                                                           variable.name)
+        return self.evaluate_guard_string(processed_guard_string)
+
+    def replace_prime_variables(self, guard_string, prime_variables, transition,
+                                value_gen):
+        if not prime_variables:
+            return guard_string
+        else:
+            processed_guard_string = guard_string
+        if transition is not None:
+            value_gen.generate_variable_values(transition, prime_variables=prime_variables)
+
+        for variable in prime_variables:
+            processed_guard_string = processed_guard_string.replace(variable.name + "'",
+                                                                    variable.get_next_value_string(transition))
+        return processed_guard_string
 
     def deal_with_missing_values(self, guard_string, variable_name):
         edited_string = guard_string
@@ -132,7 +154,6 @@ class MilpSolver:
         return left_index, right_index
 
     def remove_spaces(self, string):
-        string = string.replace("'", '"')
         lst = string.split('"')
         for i, item in enumerate(lst):
             if not i % 2:
@@ -313,7 +334,7 @@ class MilpSolver:
     def evaluate_brackets_with_last_single_operator(self, parts, brackets, operator):
         part0 = self.evaluate_guard_string(parts[0], brackets)
         part1 = self.evaluate_guard_string(parts[1], brackets)
-        number_classes = [int, float, numpy.float32, numpy.int32, numpy.float64, numpy.float32]
+        number_classes = [int, float, numpy.float32, numpy.int32, numpy.float64, numpy.float32, numpy.int64]
         if type(part0) not in number_classes or type(part1) not in number_classes:
             return False
         elif operator == Operators.GREATER:

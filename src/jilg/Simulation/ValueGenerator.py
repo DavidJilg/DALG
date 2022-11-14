@@ -28,30 +28,61 @@ class ValueGenerator:
         self.milp_solver = MilpSolver()
         self.number_of_tries = 10
 
-    def generate_variable_values(self, transition):
+    def generate_variable_values(self, transition, prime_variables=None):
+        if prime_variables is not None:
+            prime_variable_mode = True
+            considered_variables = prime_variables
+        else:
+            prime_variable_mode = False
+            considered_variables = transition.writes_variables
+
         written_variables = []
         written_variables_tmp = []
         written_variables_with_out_dependency = []
-        for variable in transition.writes_variables:
+
+        # Sorting variables so that variables with dependencies get treated last
+        for variable in considered_variables:
             if len(variable.semantic_information.dependencies) == 0:
                 written_variables_with_out_dependency.append(variable)
             else:
                 written_variables_tmp.append((len(variable.semantic_information.dependencies),
                                               variable))
+
         written_variables_tmp.sort(key=lambda x: x[0])
         for variable in written_variables_tmp:
             written_variables.append(variable[1])
         written_variables = written_variables_with_out_dependency + written_variables
+
         for variable in written_variables:
             if variable.semantic_information.fixed_variable:
-                if not variable.has_been_written_to:
-                    variable.value = self.generate_variable_value(variable, transition)
+                if prime_variable_mode:
+                    variable.has_nex_value = True
+                    if not variable.has_been_written_to:
+                        variable.next_value.append((transition.id, self.generate_variable_value(variable, transition)))
+                    else:
+                        variable.next_value.append((transition.id, variable.value))
+                else:
+                    if not variable.has_been_written_to:
+                        if variable.has_nex_value and transition.id in\
+                                variable.get_next_value_transitions():
+                            variable.value = variable.get_correct_next_value(transition.id)
+                        else:
+                            variable.value = self.generate_variable_value(variable, transition)
+                        variable.has_current_value = True
+                        variable.has_been_written_to = True
+
+            else:
+                if prime_variable_mode:
+                    variable.next_value.append((transition.id,
+                                               self.generate_variable_value(variable, transition)))
+                    variable.has_nex_value = True
+                else:
+                    if variable.has_nex_value and transition.id in variable.get_next_value_transitions():
+                        variable.value = variable.get_correct_next_value(transition.id)
+                    else:
+                        variable.value = self.generate_variable_value(variable, transition)
                     variable.has_current_value = True
                     variable.has_been_written_to = True
-            else:
-                variable.value = self.generate_variable_value(variable, transition)
-                variable.has_current_value = True
-                variable.has_been_written_to = True
 
     def add_deviation(self, deviation_max):
         if deviation_max == 0 or deviation_max == 0.0:

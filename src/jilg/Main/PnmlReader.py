@@ -1,3 +1,4 @@
+import logging
 import traceback
 import xml.etree.ElementTree as Et
 from copy import deepcopy
@@ -10,6 +11,7 @@ from src.jilg.Model.Model import Model
 from src.jilg.Model.Place import Place
 from src.jilg.Model.Transition import Transition
 from src.jilg.Model.Variable import Variable
+from src.jilg.Other import Global
 
 '''
 This class is used to parse PNML models to the internal model representation contained in
@@ -54,9 +56,12 @@ class PnmlReader:
             model_obj.initial_marking = deepcopy(model_obj.current_marking)
 
             self.replace_non_valid_variable_names(model_obj)
-            self.add_missing_read_variables(model_obj)
+            self.add_missing_read_and_write_variables(model_obj)
             self.check_model_conformance(model_obj)
-            return model_obj, self.warnings
+            listed_warnings = []
+            for warning in self.warnings:
+                listed_warnings.append("-"+warning)
+            return model_obj, listed_warnings
         except MissingEssentialValueError as error:
             print("The following error occurred while parsing the model: " + error.message)
             self.errors = [error.message]
@@ -73,7 +78,6 @@ class PnmlReader:
             self.errors = [error_message]
             return None, self.errors
         except Exception as error:
-            print(traceback.format_exc())
             self.errors = [str(type(error).__name__)]
             return None, self.errors
 
@@ -234,12 +238,6 @@ class PnmlReader:
                 if transition.guard.guard_string == "" or transition.guard.guard_string is None:
                     self.warnings.append("Transition with the id '{id}' has a invalid guard!"
                                          .format(id=transition.id))
-                for variable in model_obj.variables:
-                    if variable.name + "'" in transition.guard.guard_string:
-                        self.warnings.append("Transition with the id '{id}' has a guard that"
-                                             " contains Prime Variables. These type of guards are"
-                                             " currently not supported!"
-                                             .format(id=transition.id))
 
         if len(model_obj.final_markings) < 1:
             self.warnings.append("The model has no final markings!")
@@ -251,7 +249,8 @@ class PnmlReader:
         if not initial_token:
             raise ModelConformanceError("No place has a token in the initial marking!")
 
-    def add_missing_read_variables(self, model_obj):
+
+    def add_missing_read_and_write_variables(self, model_obj):
         for transition in model_obj.transitions:
             if transition.guard is not None:
                 guard_string = transition.guard.guard_string
@@ -264,6 +263,18 @@ class PnmlReader:
                                 break
                         if ref_missing:
                             transition.reads_variables.append(variable)
+                    if variable.name + "'" in guard_string:
+                        ref_missing = True
+                        for variable_ref in transition.writes_variables:
+                            if variable_ref == variable:
+                                ref_missing = False
+                                break
+                        if ref_missing:
+                            self.warnings.append(
+                                f"The transition with the id \"{transition.id}\" has a guard that contains"
+                                f" the prime variable \" {variable.name}' \" but does not write to that"
+                                f" variable! The missing write operation has been added!")
+                            transition.writes_variables.append(variable)
 
     def setup_model(self, path):
         tree = Et.parse(path)
@@ -477,11 +488,23 @@ class PnmlReader:
             self.warnings.append("Missing variable type for variable '{var_name}':"
                                  " assuming 'String' type!")
         try:
-            var_pos_x = float(self.get_child_by_tag(variable, "position").get("x", 0))
-            var_pos_y = float(self.get_child_by_tag(variable, "position").get("y", 0))
-            var_height = float(self.get_child_by_tag(variable, "dimension").get("height", 50))
-            var_width = float(self.get_child_by_tag(variable, "dimension").get("width", 50))
+            position = self.get_child_by_tag(variable, "position")
+            dimension = self.get_child_by_tag(variable, "dimension")
+            if position is not None:
+                var_pos_x = float(position.get("x", 0))
+                var_pos_y = float(position.get("y", 0))
+            else:
+                var_pos_x = 0.0
+                var_pos_y = 0.0
+            if dimension is not None:
+                var_height = float(dimension.get("height", 50))
+                var_width = float(dimension.get("width", 50))
+            else:
+                var_height = 50
+                var_width = 50
         except:
+            Global.log_error(__file__, "Failed to read graphical information about a"
+                                                      " variable!", traceback)
             var_pos_x = 0.0
             var_pos_y = 0.0
             var_height = 50

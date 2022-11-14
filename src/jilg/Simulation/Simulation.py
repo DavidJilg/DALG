@@ -1,5 +1,6 @@
 import datetime
 import itertools
+import logging
 import random
 import threading
 import traceback
@@ -13,6 +14,7 @@ from PySide6.QtCore import QDateTime
 from src.jilg.Main.ModelAnalyser import ModelAnalyser
 from src.jilg.Model.MilpSolver import MilpSolver
 from src.jilg.Model.Model import Model
+from src.jilg.Other import Global
 from src.jilg.Other.Global import VariableTypes
 from src.jilg.Simulation.Event import Event
 from src.jilg.Simulation.EventLog import EventLog
@@ -162,6 +164,7 @@ class Simulation:
                 sim_thread = threading.Thread(target=self.run_full_exploration, daemon=True)
                 sim_thread.start()
         except:
+            Global.log_error(__file__, "Simulation ended with errors!", traceback)
             self.exit_with_errors = True
             self.errors = str(traceback.format_exc())
 
@@ -214,7 +217,7 @@ class Simulation:
                             if current_trace_length >= self.config.min_trace_length:
                                 other_traces.append(current_trace[:])
                         else:
-                            enabled_transitions = model.get_enabled_transitions(False, False)
+                            enabled_transitions = model.get_enabled_transitions(False, False, None)
                             if not enabled_transitions:
                                 if current_trace_length >= self.config.min_trace_length:
                                     other_traces.append(current_trace[:])
@@ -312,6 +315,7 @@ class Simulation:
                     self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
                 self.sim_status.simulation_ended = True
         except:
+            Global.log_error(__file__, "Simulation ended with errors!", traceback)
             self.exit_with_errors = True
             self.errors = str(traceback.format_exc())
 
@@ -374,6 +378,7 @@ class Simulation:
                 self.sim_status.nr_of_current_traces = len(self.current_event_log.traces)
                 self.sim_status.simulation_ended = True
         except:
+            Global.log_error(__file__, "Simulation ended with errors!", traceback)
             self.exit_with_errors = True
             if no_traces_possible:
                 self.errors = "No traces possible with the current model/configuration could be found. Check if," \
@@ -450,6 +455,7 @@ class Simulation:
                         self.create_event(fired_transition, trace)
                         if fired_transition.writes_variables:
                             self.value_generator.generate_variable_values(fired_transition)
+                    self.model.reset_prime_variable_values()
                 else:
                     return trace, self.model.is_in_final_state()
         return trace, True
@@ -631,7 +637,8 @@ class Simulation:
         return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
 
     def fire_transition(self):
-        enabled_transitions, probabilities = self.model.get_enabled_transitions(True, True)
+        enabled_transitions, probabilities = self.model.get_enabled_transitions(True, True,
+                                                                                self.value_generator)
         if len(enabled_transitions) == 0:
             return None
         else:
@@ -691,7 +698,9 @@ class Simulation:
         return True
 
     def are_duplicate_variables(self, variable1, variable2):
-        if variable1[0] != variable2[0]:
+        if variable1[0] == "time:timestamp":
+            return True
+        elif variable1[0] != variable2[0]:
             return False
         elif variable1[1] != variable2[1]:
             return False
@@ -819,6 +828,7 @@ class Simulation:
                 no_traces_found = True
                 raise Exception
         except:
+            Global.log_error(__file__, "Simulation ended with errors!", traceback)
             self.exit_with_errors = True
             if no_traces_possible:
                 self.errors = "No traces possible with the current model/configuration could be found. Check if," \

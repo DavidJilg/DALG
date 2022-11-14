@@ -1,8 +1,10 @@
+import logging
 import re
 import traceback
 
 from PySide6.QtCore import QDateTime
 
+from src.jilg.Other import Global
 from src.jilg.Other.Global import VariableTypes
 
 '''
@@ -288,14 +290,16 @@ class ModelAnalyser:
                     sem_info.values[0].append(int(value))
                     sem_info.values[1].append(1)
                 except:
-                    print(traceback.format_exc())
+                    Global.log_error(__file__, "Adding integer values to sem info"
+                                                              " object failed!", traceback)
         elif variable_type == VariableTypes.DOUBLE:
             for value in values:
                 try:
                     sem_info.values[0].append(float(value))
                     sem_info.values[1].append(1)
                 except:
-                    print(traceback.format_exc())
+                    Global.log_error(__file__, "Adding float values to sem info"
+                                                              " object failed!", traceback)
         else:
             for value in values:
                 if value in ["true", "True", "TRUE"]:

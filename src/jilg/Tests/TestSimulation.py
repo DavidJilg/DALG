@@ -233,9 +233,9 @@ class TestSimulation(TestCase):
         self.simulation.thread_stop = False
         self.simulation.sim_status = SimStatus(nr_estimation_traces=-1)
         self.simulation.config.number_of_traces = 5
-        tuple = self.simulation.calculate_possible_traces(model)
-        self.assertEqual(2, tuple[0])
-        self.assertEqual([["n5", "n6"], ["n5", "n7"]], tuple[1])
-        self.assertEqual([], tuple[2])
+        result = self.simulation.calculate_possible_traces(model)
+        self.assertEqual(2, result.number_of_possible_traces)
+        self.assertEqual([["n5", "n6"], ["n5", "n7"]], result.valid_ending_traces)
+        self.assertEqual([], result.other_traces)
 
 

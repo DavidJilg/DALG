@@ -52,7 +52,7 @@ class TestModel(TestCase):
         self.assertTrue(model.get_place_or_transition_by_id(self.transition_id).id == self.transition_id)
 
     def get_transition_ids(self, model):
-        transitions = model.get_enabled_transitions(False, True)
+        transitions = model.get_enabled_transitions(False, True, None)
         ids = []
         for transition in transitions:
             ids.append(transition.id)

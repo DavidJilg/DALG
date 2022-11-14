@@ -12,6 +12,7 @@ Each variable gets assigned one instance of this class.
 
 class SemanticInformation:
     variable_name: str
+    original_variable_name: str
     fixed_variable: bool
     trace_variable: bool
     has_distribution: bool
@@ -33,12 +34,13 @@ class SemanticInformation:
     def print_summary(self, print_list_elements=False):
         print_summary_global(self, print_list_elements)
 
-    def __init__(self, variable_name, model):
+    def __init__(self, variable, model):
         self.self_reference_deviation = 0.0
         self.fixed_variable = False
         self.trace_variable = False
-        self.variable_name = variable_name
-        variable = model.get_variable_by_name(variable_name)
+        self.variable_name = variable.name
+        self.original_variable_name = variable.original_name
+        variable = model.get_variable_by_name(variable.name)
         if variable.has_current_value:
             self.initial_value = variable.value
         else:
