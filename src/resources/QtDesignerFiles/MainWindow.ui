@@ -1723,9 +1723,9 @@ Simulation</string>
      <widget class="QLabel" name="nr_of_possible_traces_label">
       <property name="geometry">
        <rect>
-        <x>650</x>
+        <x>760</x>
         <y>10</y>
-        <width>181</width>
+        <width>131</width>
         <height>31</height>
        </rect>
       </property>
@@ -1749,7 +1749,7 @@ Simulation</string>
        <rect>
         <x>450</x>
         <y>10</y>
-        <width>201</width>
+        <width>341</width>
         <height>31</height>
        </rect>
       </property>
@@ -1762,7 +1762,7 @@ Simulation</string>
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the model has no loop with a changing marking and the &amp;quot;random exploration&amp;quot; or &amp;quot;full exploration&amp;quot; strategy is chosen an estimation of the number of possible traces will be shown here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="text">
-       <string>Nr. of max possible traces:</string>
+       <string>Nr. of max. possible traces (trace estimation):</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -2978,6 +2978,7 @@ Model</string>
     <property name="font">
      <font>
       <pointsize>11</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
       <underline>false</underline>
       <strikeout>false</strikeout>

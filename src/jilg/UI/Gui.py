@@ -337,9 +337,8 @@ class MainGui:
         self.change_perform_trace_estimation()
         self.change_duplicates_with_data()
         self.change_variance_input()
-
         self.fix_gui_element_values()
-
+        self.window.ui.nr_of_possible_traces_label.setText("--")
         if os.name != 'nt':
             self.set_up_for_linux()
 
@@ -479,15 +478,16 @@ class MainGui:
             self.window.ui.start_simulation_button.setEnabled(True)
             self.window.ui.stop_simulation_button.setEnabled(False)
             self.window.ui.progressBar.setValue(0)
-            self.window.ui.nr_of_generated_logs_label.setText("0")
+            self.window.ui.nr_of_possible_traces_label.setText("--")
             self.window.ui.nr_of_generated_traces_label.setText("0")
-            self.window.ui.nr_of_possible_traces_label.setText("0")
+            self.window.ui.nr_of_generated_logs_label.setText("0")
             self.window.ui.sim_status_label.setText("Not Running!")
             self.status = Status.MODEL_LOADED
             self.sim_stop = False
             self.reset_everything_after_simulation_exception()
         else:
             if update_info.sim_strategy == "random":
+                self.window.ui.nr_of_possible_traces_label.setText("--")
                 self.window.ui.progressBar.setValue(update_info.sim_percentage)
                 self.window.ui.nr_of_generated_logs_label.setText(
                     str(update_info.sim_status.nr_of_current_logs))
@@ -504,10 +504,14 @@ class MainGui:
                 self.window.ui.nr_of_generated_traces_label.setText(
                     str(update_info.nr_of_total_traces))
                 try:
-                    sim_status5 = int(update_info.sim_status.nr_of_estimated_traces)
-                    self.window.ui.nr_of_possible_traces_label.setText(str(sim_status5))
+                    nr_of_possible_traces = int(update_info.sim_status.nr_of_estimated_traces)
+                    if nr_of_possible_traces > 0:
+                        self.window.ui.nr_of_possible_traces_label.setText("--")
+                    else:
+                        self.window.ui.nr_of_possible_traces_label.setText(str(nr_of_possible_traces))
                 except:
-                    Global.log_error(__file__, "Failed to convert nr_of_estimated traces to string for"
+                    Global.log_error(__file__, "Failed to convert nr_of_estimated traces to "
+                                               "string for "
                                                               " gui update!", traceback)
                     self.window.ui.nr_of_possible_traces_label.setText("0")
 
