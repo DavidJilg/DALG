@@ -1,9 +1,12 @@
 import json
 import os
+from typing import Union
 
 import numpy as np
+from numpy.random import Generator
 
 from src.jilg.Model.Distribution import Distribution
+from src.jilg.Model.Model import Model
 from src.jilg.Other.Global import *
 from src.jilg.Model.SemanticInformation import SemanticInformation
 from src.jilg.Simulation.SimulationConfiguration import SimulationConfiguration
@@ -30,7 +33,7 @@ class Configuration:
     include_metadata: bool
     rng: np.random.default_rng
 
-    def __init__(self, rng):
+    def __init__(self, rng: Generator):
         self.semantic_information = []
         self.include_metadata = False
         self.model_file_path = ""
@@ -46,7 +49,7 @@ class Configuration:
         for sem_info in self.semantic_information:
             sem_info.remove_value_duplicates()
 
-    def configure_variables_and_transitions(self, model):
+    def configure_variables_and_transitions(self, model: Model):
         for variable in model.variables:
             for var_config in self.semantic_information:
                 if variable.name == var_config.variable_name:
@@ -66,14 +69,15 @@ class Configuration:
                     transition.invisible = trans_config.invisible
                     break
 
-    def configure_simulation(self, model):
+    def configure_simulation(self, model: Model):
         for transition in model.transitions:
             trans_config_obj = TransitionConfiguration(transition.id)
             trans_config_obj.activity_name = transition.name
             trans_config_obj.invisible = transition.invisible
             self.simulation_config.transition_configs.append(trans_config_obj)
 
-    def create_basic_configuration(self, model, path, output_dir="", nr_of_event_logs=1):
+    def create_basic_configuration(self, model: Model, path: str, output_dir: str = "",
+                                   nr_of_event_logs: int = 1):
         self.number_of_event_logs = nr_of_event_logs
         self.model_file_path = path
         if output_dir == "":
@@ -99,10 +103,10 @@ class Configuration:
         self.configure_simulation(model)
         self.configure_variables_and_transitions(model)
 
-    def print_summary(self, print_list_elements=False):
+    def print_summary(self, print_list_elements: bool = False):
         print_summary_global(self, print_list_elements)
 
-    def write_config_file(self, path):
+    def write_config_file(self, path: str):
         json_data = {'model_file_path': self.model_file_path,
                      'output_directory': self.output_directory_path,
                      'event_log_name': self.event_log_name,
@@ -119,7 +123,7 @@ class Configuration:
         with open(path, 'w') as config_file:
             json.dump(json_data, config_file, indent=3)
 
-    def write_simulation_config(self):
+    def write_simulation_config(self) -> dict:
         if self.simulation_config is not None:
             sim_confic_dict = {'sim_strategy': self.simulation_config.sim_strategy,
                                'number_of_traces': self.simulation_config.number_of_traces,
@@ -127,7 +131,7 @@ class Configuration:
                                'min_trace_length': self.simulation_config.min_trace_length,
                                'max_loop_iterations_markings': self.simulation_config.max_loop_iterations,
                                'max_loop_iterations_transitions': self.simulation_config
-                                   .max_loop_iterations_transitions,
+                               .max_loop_iterations_transitions,
                                'max_trace_duplicates': self.simulation_config.max_trace_duplicates,
                                'duplicates_with_data': self.simulation_config.duplicates_with_data_perspective,
                                'only_ending_traces': self.simulation_config.only_ending_traces,
@@ -153,9 +157,9 @@ class Configuration:
                                'allow_duplicate_trace_names':
                                    self.simulation_config.allow_duplicate_trace_names,
                                'model_has_no_increasing_loop': self.simulation_config.
-                                   model_has_no_increasing_loop,
+                               model_has_no_increasing_loop,
                                'include_partial_traces': self.simulation_config.
-                                   include_partial_traces,
+                               include_partial_traces,
                                "values_in_origin_event":
                                    self.simulation_config.values_in_origin_event,
                                "utc_offset": self.simulation_config.utc_offset,
@@ -169,7 +173,7 @@ class Configuration:
                                "use_only_values_from_guard_strings":
                                    self.simulation_config.use_only_values_from_guard_strings,
                                "timestamp_millieseconds": self.simulation_config.
-                                   timestamp_millieseconds
+                               timestamp_millieseconds
                                }
 
             for transition_config in self.simulation_config.transition_configs:
@@ -177,9 +181,9 @@ class Configuration:
                     self.write_transition_config(transition_config))
             return sim_confic_dict
         else:
-            return "None"
+            return {}
 
-    def write_transition_config(self, transition_config):
+    def write_transition_config(self, transition_config: TransitionConfiguration) -> dict:
         trans_config_dict = {'transition_id': transition_config.transition_id,
                              'activity_name': transition_config.activity_name,
                              'weight': transition_config.weight,
@@ -201,7 +205,7 @@ class Configuration:
 
         return trans_config_dict
 
-    def write_semantic_information(self, sem_info):
+    def write_semantic_information(self, sem_info: SemanticInformation) -> dict:
         sem_info_dict = {"variable_name": sem_info.variable_name,
                          "variable_original_name": sem_info.original_variable_name,
                          "has_distribution": sem_info.has_distribution, "has_min": sem_info.has_min,
@@ -245,7 +249,7 @@ class Configuration:
 
         return sem_info_dict
 
-    def write_distribution(self, sem_info):
+    def write_distribution(self, sem_info: SemanticInformation) -> dict:
         distribution = sem_info.distribution
         distribution_dict = {"type": distribution.distribution_type}
 
@@ -260,7 +264,7 @@ class Configuration:
 
         return distribution_dict
 
-    def read_config_file(self, path, model, with_model=True):
+    def read_config_file(self, path: str, model: Model, with_model: bool = True):
         with open(path) as config_file:
             json_data = json.load(config_file)
             self.model_file_path = json_data["model_file_path"]
@@ -283,7 +287,7 @@ class Configuration:
         if with_model:
             self.configure_variables_and_transitions(model)
 
-    def read_simulation_config(self, sim_config_dict):
+    def read_simulation_config(self, sim_config_dict: dict) -> SimulationConfiguration:
         sim_config = SimulationConfiguration()
         sim_config.sim_strategy = sim_config_dict['sim_strategy']
 
@@ -342,7 +346,7 @@ class Configuration:
 
         return sim_config
 
-    def read_trans_config(self, trans_config_dict):
+    def read_trans_config(self, trans_config_dict: dict) -> TransitionConfiguration:
         trans_config = TransitionConfiguration(trans_config_dict['transition_id'])
         trans_config.activity_name = trans_config_dict["activity_name"]
         trans_config.use_general_config = trans_config_dict["use_general_config"]
@@ -389,8 +393,9 @@ class Configuration:
 
         return trans_config
 
-    def read_sem_info(self, sem_info, model):
-        sem_info_obj = SemanticInformation(model.get_variable_by_name(sem_info['variable_name']), model)
+    def read_sem_info(self, sem_info: dict, model: Model) -> SemanticInformation:
+        sem_info_obj = SemanticInformation(model.get_variable_by_name(sem_info['variable_name']),
+                                           model)
         sem_info_obj.precision = sem_info["precision"]
         sem_info_obj.use_initial_value = sem_info["use_initial_value"]
         sem_info_obj.generate_initial_value = sem_info["generate_initial_value"]
@@ -438,16 +443,17 @@ class Configuration:
         if "variable_original_name" in sem_info.keys():
             sem_info_obj.variable_original_name = sem_info["variable_original_name"]
         else:
-            sem_info_obj.variable_original_name = model.get_variable_by_name(sem_info['variable_name'])\
+            sem_info_obj.variable_original_name = model.get_variable_by_name(
+                sem_info['variable_name']) \
                 .original_name
 
         return sem_info_obj
 
-    def initialize_distribution(self, distribution_dict):
+    def initialize_distribution(self, distribution_dict: dict) -> Distribution:
         distribution = Distribution(self.rng, distribution_dict["type"], distribution_dict)
         return distribution
 
-    def get_sem_info_by_variable_name(self, var_name):
+    def get_sem_info_by_variable_name(self, var_name: str) -> Union[SemanticInformation, None]:
         for sem_info in self.semantic_information:
             if sem_info.variable_name == var_name:
                 return sem_info
