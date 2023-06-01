@@ -31,7 +31,7 @@ class SemanticInformation:
     precision: int
     generate_initial_value: bool
 
-    def print_summary(self, print_list_elements=False):
+    def print_summary(self, print_list_elements: bool = False):
         print_summary_global(self, print_list_elements)
 
     def __init__(self, variable, model):
@@ -108,7 +108,7 @@ class SemanticInformation:
         self.include_inverse_intervals = False
         self.precision = Global.standard_precision
 
-    def get_intervals_string(self, model):
+    def get_intervals_string(self, model) -> str:
         string = ""
         var_type = model.get_variable_by_name(self.variable_name).type
         for interval in self.intervals:
@@ -123,7 +123,7 @@ class SemanticInformation:
 
         return string[:-1]
 
-    def get_dependencies_string(self, var_type=VariableTypes.STRING):
+    def get_dependencies_string(self, var_type: VariableTypes = VariableTypes.STRING) -> str:
         string = ""
         for dependency in self.dependencies:
             logical_expression = str(dependency[0])
@@ -146,7 +146,7 @@ class SemanticInformation:
                                                                        value=value)
         return string[:-2]
 
-    def get_self_reference_value(self, timestamp):
+    def get_self_reference_value(self, timestamp: int) -> str:
         days = timestamp // (24 * 3600)
         timestamp = timestamp % (24 * 3600)
         hours = timestamp // 3600
@@ -172,7 +172,7 @@ class SemanticInformation:
         string += str(seconds)
         return string
 
-    def get_values_string(self, model):
+    def get_values_string(self, model) -> str:
         string = ""
         if model.get_variable_by_name(self.variable_name).type == VariableTypes.DATE:
             for value in self.values[0]:

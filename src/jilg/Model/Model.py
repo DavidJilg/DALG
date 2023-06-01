@@ -1,7 +1,13 @@
 from copy import deepcopy
+from typing import Union
 
+from src.jilg.Model.Arc import Arc
 from src.jilg.Model.Marking import Marking
+from src.jilg.Model.Place import Place
+from src.jilg.Model.Transition import Transition
+from src.jilg.Model.Variable import Variable
 from src.jilg.Other.Global import print_summary_global
+from src.jilg.Simulation.ValueGenerator import ValueGenerator
 
 '''
 This class is used to represent the model that is currently loaded. The PnmlReader will create an
@@ -19,10 +25,10 @@ class Model:
     variables: list
     arcs: list
     initial_marking: Marking
-    current_marking: Marking
+    current_marking: Union[Marking, None]
     final_markings: list
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.id = ""
         self.type = ""
@@ -45,7 +51,7 @@ class Model:
             variable.has_nex_value = False
             variable.next_value = []
 
-    def generate_initial_values(self, gen):
+    def generate_initial_values(self, gen: ValueGenerator):
         for variable in self.variables:
             variable.has_current_value = False
             variable.value = None
@@ -60,35 +66,34 @@ class Model:
                     variable.has_current_value = True
                     variable.has_been_written_to = True
 
-    def print_summary(self, print_list_elements=False):
+    def print_summary(self, print_list_elements: bool = False):
         print_summary_global(self, print_list_elements)
 
-    def get_variable_by_name(self, var_name):
+    def get_variable_by_name(self, var_name: str) -> Union[Variable, None]:
         for var in self.variables:
             if var.name == var_name or var.original_name == var_name:
                 return var
-
         return None
 
-    def get_arc_by_id(self, arc_id):
+    def get_arc_by_id(self, arc_id: str) -> Union[Arc, None]:
         for arc in self.arcs:
             if arc.id == arc_id:
                 return arc
         return None
 
-    def is_in_final_state(self):
+    def is_in_final_state(self) -> bool:
         for marking in self.final_markings:
             if self.check_final_marking(marking):
                 return True
         return False
 
-    def check_final_marking(self, final_marking):
+    def check_final_marking(self, final_marking: Marking) -> bool:
         for token_place in final_marking.token_places:
             if self.get_place_or_transition_by_id(token_place[0]).token_count != token_place[1]:
                 return False
         return True
 
-    def get_place_or_transition_by_id(self, object_id):
+    def get_place_or_transition_by_id(self, object_id: str) -> Union[Place, Transition, None]:
         for transition in self.transitions:
             if transition.id == object_id:
                 return transition
@@ -97,7 +102,7 @@ class Model:
                 return place
         return None
 
-    def get_place_or_transition_by_name(self, name):
+    def get_place_or_transition_by_name(self, name: str) -> Union[Place, Transition, None]:
         for transition in self.transitions:
             if transition.name == name:
                 return transition
@@ -106,7 +111,8 @@ class Model:
                 return place
         return None
 
-    def get_enabled_transitions(self, with_probabilities, with_data, value_gen):
+    def get_enabled_transitions(self, with_probabilities: bool, with_data: bool, value_gen: ValueGenerator) ->\
+            ([Transition], Union[None, list[float]]):
         enabled_transitions = []
         for transition in self.transitions:
             if transition.is_enabled(with_data, value_gen):
@@ -120,7 +126,7 @@ class Model:
         else:
             return enabled_transitions
 
-    def calculate_probabilities(self, enabled_transitions):
+    def calculate_probabilities(self, enabled_transitions: [Transition]) -> [float]:
         weights = []
         for transition in enabled_transitions:
             weights.append(transition.config.weight)
@@ -142,11 +148,11 @@ class Model:
             probabilities[-1] += 1 - probabilities_sum
         return probabilities
 
-    def fire_transition(self, transition_id, with_data=True):
+    def fire_transition(self, transition_id: str, with_data: bool = True):
         transition = self.get_place_or_transition_by_id(transition_id)
         self.update_current_marking(transition.fire())
 
-    def update_current_marking(self, effected_ids):
+    def update_current_marking(self, effected_ids: [str]):
         new_token_places = []
         effected_input_places, effected_output_places = effected_ids
         for token_place in self.current_marking.token_places:

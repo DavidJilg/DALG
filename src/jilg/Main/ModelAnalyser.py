@@ -1,9 +1,12 @@
 import logging
 import re
 import traceback
+from typing import Union
 
 from PySide6.QtCore import QDateTime
 
+from src.jilg.Main.Configuration import Configuration
+from src.jilg.Model.Model import Model
 from src.jilg.Other import Global
 from src.jilg.Other.Global import VariableTypes
 
@@ -23,14 +26,15 @@ class ModelAnalyser:
     numeric_var_types = [VariableTypes.INT, VariableTypes.LONG, VariableTypes.DOUBLE,
                          VariableTypes.DATE]
 
-    def analyse_model(self, model, config):
+    def analyse_model(self, model: Model, config: Configuration):
         variable_names = []
         for variable in model.variables:
             variable_names.append(variable.name)
         self.determine_values(model, config, variable_names)
         self.determine_intervals(model, config, variable_names)
 
-    def determine_intervals(self, model, config, var_names, with_return=False):
+    def determine_intervals(self, model: Model, config: Configuration, var_names: [str], with_return: bool = False) ->\
+            Union[None, dict[str]]:
         if var_names is None:
             var_names = []
             for variable in model.variables:
@@ -70,7 +74,7 @@ class ModelAnalyser:
                 sem_info = config.get_sem_info_by_variable_name(key)
                 sem_info.intervals = interval_dict[key]
 
-    def analyse_guard_intervals(self, guard_string, var_names, model, interval_dict):
+    def analyse_guard_intervals(self, guard_string: str, var_names: [str], model: Model, interval_dict: {str}):
         if "<" in guard_string or ">" in guard_string:
             for var_name in var_names:
                 var = model.get_variable_by_name(var_name)
@@ -89,19 +93,20 @@ class ModelAnalyser:
                             for interval in intervals:
                                 interval_dict[var_name].append(interval)
 
-    def check_for_intervals(self, guard_string, var_name, var_type):
+    def check_for_intervals(self, guard_string: str, var_name: str, var_type: VariableTypes) -> ([(str, str)], bool):
         intervals_found = False
         indices = [m.start() for m in re.finditer(var_name, guard_string)]
         intervals = []
         for index in indices:
             interval, interval_found = self.check_variable_name_occurence_for_interval(
-                index, var_name, guard_string, var_type)
+                index, guard_string, var_type)
             if interval_found:
                 intervals.append(interval)
                 intervals_found = True
         return intervals, intervals_found
 
-    def check_variable_name_occurence_for_interval(self, index, var_name, guard, var_type):
+    def check_variable_name_occurence_for_interval(self, index: int, guard: str, var_type: VariableTypes) ->\
+            Union[tuple[None, bool], bool]:
         index_copy = index
         while index_copy >= 0:  # Check left
             if guard[index_copy] == "=":
@@ -139,7 +144,8 @@ class ModelAnalyser:
             index_copy += 1
         return None, False
 
-    def find_interval(self, index, direction, guard, operator, var_type):
+    def find_interval(self, index: int, direction: str, guard: str, operator: str, var_type: VariableTypes) ->\
+            Union[tuple[None, bool], tuple[tuple[str, str], bool]]:
         interval_boundry_str = ""
         minus_counter = 0
         if direction == "left":
@@ -178,7 +184,7 @@ class ModelAnalyser:
                 return (operator, interval_boundry_str), True
         return None, False
 
-    def invert_operator(self, operator):
+    def invert_operator(self, operator: str) -> str:
         if operator == "<":
             return ">"
         elif operator == ">":
@@ -190,7 +196,7 @@ class ModelAnalyser:
         else:
             return operator
 
-    def determine_values(self, model, config, variable_names):
+    def determine_values(self, model: Model, config: Configuration, variable_names: [str]):
         guards = []
         for transition in model.transitions:
             if transition.guard is not None:
@@ -200,7 +206,7 @@ class ModelAnalyser:
         config.remove_duplicate_variable_values()
         config.configure_variables_and_transitions(model)
 
-    def analyse_guard(self, guard, variable_names, config, model):
+    def analyse_guard(self, guard: str, variable_names: [str], config: Configuration, model: Model):
         for variable_name in variable_names:
             if variable_name in guard:
                 processed_guard = guard
@@ -213,7 +219,7 @@ class ModelAnalyser:
                 if values_found:
                     self.add_values(values, variable_name, config, model)
 
-    def check_for_values(self, guard, variable_name):
+    def check_for_values(self, guard: str, variable_name: str) -> (list, bool):
         values = []
         values_found = False
         indices = [m.start() for m in re.finditer(variable_name, guard)]
@@ -225,7 +231,7 @@ class ModelAnalyser:
                 values_found = True
         return values, values_found
 
-    def check_variable_name_occurence_for_value(self, index, variable_name, guard):
+    def check_variable_name_occurence_for_value(self, index: int, variable_name: str, guard: str) -> (str, bool):
         index_copy = index
         while index_copy >= 0:
             if guard[index_copy] == "=":
@@ -247,7 +253,7 @@ class ModelAnalyser:
                 return "", False
             index_copy += 1
 
-    def find_value(self, index, search_direction, guard_string):
+    def find_value(self, index: int, search_direction: str, guard_string: str) -> (str, bool):
         value = ""
         if search_direction == "left":
             while index >= 0:
@@ -277,7 +283,7 @@ class ModelAnalyser:
             else:
                 return value.replace(" ", ""), True
 
-    def add_values(self, values, variable_name, config, model):
+    def add_values(self, values: list, variable_name: str, config: Configuration, model: Model):
         sem_info = config.get_sem_info_by_variable_name(variable_name)
         variable_type = model.get_variable_by_name(variable_name).type
         if variable_type == VariableTypes.DATE or variable_type == VariableTypes.STRING:

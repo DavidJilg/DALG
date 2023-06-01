@@ -3,7 +3,6 @@ import math
 import numpy as np
 
 from src.jilg.Model.MilpSolver import MilpSolver
-from src.jilg.Model.Model import Model
 from src.jilg.Other.Global import VariableTypes
 from src.jilg.Other.Global import print_summary_global
 
@@ -14,7 +13,6 @@ simulation.
 
 
 class ValueGenerator:
-    model: Model
     rng: np.random.default_rng
     milp_solver: MilpSolver
     number_of_tries: int

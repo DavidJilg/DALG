@@ -1,3 +1,5 @@
+from typing import Union
+
 import numpy as np
 import numpy.random
 from scipy import stats
@@ -25,10 +27,10 @@ class Distribution:
     set_new_seed: bool
     rng: np.random.default_rng
 
-    def print_summary(self, print_list_elements=False):
+    def print_summary(self, print_list_elements: bool = False):
         print_summary_global(self, print_list_elements)
 
-    def __init__(self, rng, distribution_type, other_arguments):
+    def __init__(self, rng: np.random.default_rng, distribution_type: str, other_arguments: dict):
         if other_arguments["minimum"] == other_arguments["maximum"]:
             other_arguments["maximum"] += 1
         self.distribution_type = distribution_type
@@ -78,19 +80,16 @@ class Distribution:
                 loc=self.minimum,
                 scale=self.standard_deviation)
 
-    def get_truncated_normal(self, mean, sd, low, upper):
+    def get_truncated_normal(self, mean: float, sd: float, low: float, upper: float) -> truncnorm:
         return truncnorm((low - mean) / sd, (upper - mean) / sd, loc=mean, scale=sd)
 
-    def get_truncated_exponential(self, mean, sd, low, upper):
-        return truncnorm((low - mean) / sd, (upper - mean) / sd, loc=mean, scale=sd)
-
-    def get_next_int(self):
+    def get_next_int(self) -> int:
         return int(self.get_next_value())
 
-    def get_next_float(self):
+    def get_next_float(self) -> float:
         return self.get_next_value()
 
-    def get_next_value(self):
+    def get_next_value(self) -> Union[float, int]:
         if self.set_new_seed:
             numpy.random.seed(int(self.rng.uniform(0, 1000)))
             self.set_new_seed = False

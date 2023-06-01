@@ -120,7 +120,7 @@ class SimStatusReporter(QRunnable):
     @Slot()
     def run(self):
         self.sim_stop = False
-        self.main.run_simulation(write_event_logs=True, comand_line_mode=False,
+        self.main.run_simulation(write_event_logs=True, command_line_mode=False,
                                  gui_lock=self.thread_lock)
         while True:
             time.sleep(0.1)
@@ -706,7 +706,10 @@ class MainGui:
                         if with_config:
                             return True
             except:
-                loading_screen.close()
+                try:
+                    loading_screen.close()
+                except Exception:
+                    pass
                 Global.log_error(__file__, "Error occurred while loading the model!", traceback)
                 self.display_error_msg(str(traceback.format_exc()),
                                        "An Error occurred while loading the model!")

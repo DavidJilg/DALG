@@ -5,6 +5,8 @@ from xml.dom import minidom
 import numpy as np
 
 from src.jilg.Other import Global
+from src.jilg.Simulation.Event import Event
+from src.jilg.Simulation.EventLog import EventLog
 
 '''
 This class is used to export the generated synthetic event log to an eXtensible Event Stream (XES)
@@ -13,21 +15,20 @@ file.
 
 
 class XesWriter:
-    def write_event_logs_to_xes_file(self, output_dir, event_logs, write_to_single_file,
-                                     file_name, trace_names, include_invisible_transitions,
-                                     include_metadata):
+    def write_event_logs_to_xes_file(self, output_dir: str, event_logs: [EventLog], write_to_single_file: bool,
+                                     file_name: str, trace_names: [str], include_invisible_transitions: bool,
+                                     include_metadata: bool):
         if write_to_single_file:
-            self.write_event_logs_to_single_file(output_dir, event_logs, include_metadata,
-                                                 file_name, trace_names[0],
-                                                 include_invisible_transitions)
+            self.write_event_logs_to_single_file(output_dir, event_logs, include_invisible_transitions,
+                                                 include_metadata, file_name, trace_names[0])
         else:
             self.write_event_logs_to_separate_files(output_dir, event_logs,
                                                     include_invisible_transitions, include_metadata,
                                                     file_name,
                                                     trace_names[0])
 
-    def write_event_logs_to_single_file(self, path, event_logs, include_invisible_transitions,
-                                        include_metadata,
+    def write_event_logs_to_single_file(self, path: str, event_logs: [EventLog], include_invisible_transitions: bool,
+                                        include_metadata: bool,
                                         file_name="event_log",
                                         trace_name="trace"):
         with open(path + file_name + ".xes", 'w') as file:
@@ -40,8 +41,8 @@ class XesWriter:
                     event_log_xml += "\n"
                 file.write(event_log_xml)
 
-    def write_event_logs_to_separate_files(self, path, event_logs, include_invisible_transitions,
-                                           include_metadata,
+    def write_event_logs_to_separate_files(self, path: str, event_logs: [EventLog], include_invisible_transitions: bool,
+                                           include_metadata: bool,
                                            file_name="event_log",
                                            trace_name="trace"):
         if len(event_logs) == 1:
@@ -56,7 +57,8 @@ class XesWriter:
                 with open(path + file_name + str(index + 1) + ".xes", 'w') as file:
                     file.write(event_log_xml)
 
-    def generate_xml(self, event_log, trace_name, include_invisible_transitions, include_metadata):
+    def generate_xml(self, event_log: EventLog, trace_name: str, include_invisible_transitions: bool,
+                     include_metadata: bool) -> str:
         tree = self.init_element_tree(event_log, include_invisible_transitions, include_metadata)
         name = ET.SubElement(tree.getroot(), "string")
         name.set("key", "concept:name")
@@ -73,7 +75,7 @@ class XesWriter:
                    "<!-- https://github.com/DavidJilg/DALG -->\n".format(version=Global.DALG_VERSION)
         return xml_declaration + comments + pretty_xml
 
-    def add_traces(self, root, event_log, trace_name, include_invisible_transitions):
+    def add_traces(self, root: ET.Element, event_log: EventLog, trace_name: str, include_invisible_transitions: bool):
         for index, trace in enumerate(event_log.traces):
             trace_element = ET.SubElement(root, "trace")
             name = ET.SubElement(trace_element, "string")
@@ -92,7 +94,7 @@ class XesWriter:
             for event in trace.events:
                 self.add_event(trace_element, event, include_invisible_transitions)
 
-    def add_event(self, trace_element, event, include_invisible_transitions):
+    def add_event(self, trace_element: ET.Element, event: Event, include_invisible_transitions: bool):
         if not event.from_invisible_transition or include_invisible_transitions:
             event_element = ET.SubElement(trace_element, "event")
             name = ET.SubElement(event_element, "string")
@@ -104,7 +106,8 @@ class XesWriter:
                 var_element.set("key", var_name)
                 var_element.set("value", str(var_value))
 
-    def init_element_tree(self, event_log, include_invisible_transitions, include_metadata):
+    def init_element_tree(self, event_log: EventLog, include_invisible_transitions: bool, include_metadata: bool) ->\
+            ET.ElementTree:
         root = ET.Element('log')
         root.set("xes.version", "1.0")
         root.set("xmlns", "http://www.xes-standard.org/")
@@ -143,17 +146,17 @@ class XesWriter:
 
         return ET.ElementTree(root)
 
-    def filter_invisible_transitions(self, log):
-        new_log = deepcopy(log)
-        for trace in new_log.traces:
+    def filter_invisible_transitions(self, event_log: EventLog):
+        new_event_log = deepcopy(event_log)
+        for trace in new_event_log.traces:
             new_events = []
             for event in trace.events:
                 if not event.from_invisible_transition:
                     new_events.append(event)
             trace.events = new_events
-        return new_log
+        return new_event_log
 
-    def add_metadata(self, root, event_log_original, include_invisible_transitions):
+    def add_metadata(self, root: ET.Element, event_log_original: EventLog, include_invisible_transitions: bool):
         if include_invisible_transitions:
             event_log = event_log_original
         else:

@@ -2,6 +2,7 @@ import logging
 import traceback
 import xml.etree.ElementTree as Et
 from copy import deepcopy
+from typing import Union
 
 from src.jilg.Model.Arc import Arc
 from src.jilg.Model.Guard import Guard
@@ -41,7 +42,7 @@ class PnmlReader:
         self.initial_marking_found = False
         self.warnings = []
 
-    def read_pnml(self, path):
+    def read_pnml(self, path: str) -> (Union[None, Model], [str]):
         self.__init__()
         try:
             model_obj, net = self.setup_model(path)
@@ -58,22 +59,23 @@ class PnmlReader:
             self.replace_non_valid_variable_names(model_obj)
             self.add_missing_read_and_write_variables(model_obj)
             self.check_model_conformance(model_obj)
+
             listed_warnings = []
             for warning in self.warnings:
-                listed_warnings.append("-"+warning)
+                listed_warnings.append("-" + warning)
             return model_obj, listed_warnings
         except MissingEssentialValueError as error:
-            print("The following error occurred while parsing the model: " + error.message)
+            logging.warning("The following error occurred while parsing the model: " + error.message)
             self.errors = [error.message]
             return None, self.errors
         except ModelConformanceError as error:
-            print("The following error occurred while checking the conformance of the model: "
+            logging.warning("The following error occurred while checking the conformance of the model: "
                   + error.message)
             self.errors = [error.message]
             return None, self.errors
         except FileNotFoundError:
             error_message = "File not found!"
-            print("The following error occurred while checking the conformance of the model: "
+            logging.error("The following error occurred while checking the conformance of the model: "
                   + error_message)
             self.errors = [error_message]
             return None, self.errors
@@ -81,7 +83,7 @@ class PnmlReader:
             self.errors = [str(type(error).__name__)]
             return None, self.errors
 
-    def add_missing_places_in_final_markings(self, model_obj):
+    def add_missing_places_in_final_markings(self, model_obj: Model):
         place_ids = []
         for place in model_obj.places:
             place_ids.append(place.id)
@@ -96,7 +98,7 @@ class PnmlReader:
                 if place_missing:
                     final_marking.token_places.append((place_id, 0))
 
-    def replace_non_valid_variable_names(self, model):
+    def replace_non_valid_variable_names(self, model: Model):
         replacement_index = 0
         var_names = []
         variables = []
@@ -217,7 +219,7 @@ class PnmlReader:
                     if var[0] in trans.guard.guard_string:
                         trans.guard.guard_string = trans.guard.guard_string.replace(var[0], var[1])
 
-    def check_model_conformance(self, model_obj):
+    def check_model_conformance(self, model_obj: Model):
         if len(model_obj.places) < 1:
             raise ModelConformanceError("The model has no places!")
         if len(model_obj.transitions) < 1:
@@ -249,8 +251,7 @@ class PnmlReader:
         if not initial_token:
             raise ModelConformanceError("No place has a token in the initial marking!")
 
-
-    def add_missing_read_and_write_variables(self, model_obj):
+    def add_missing_read_and_write_variables(self, model_obj: Model):
         for transition in model_obj.transitions:
             if transition.guard is not None:
                 guard_string = transition.guard.guard_string
@@ -276,7 +277,7 @@ class PnmlReader:
                                 f" variable! The missing write operation has been added!")
                             transition.writes_variables.append(variable)
 
-    def setup_model(self, path):
+    def setup_model(self, path: str) -> (Model, Et.Element):
         tree = Et.parse(path)
         root = tree.getroot()
         net = root[0]
@@ -292,7 +293,16 @@ class PnmlReader:
         model_obj.final_markings = []
         return model_obj, net
 
-    def read_final_markings(self, model_obj, net):
+    def read_final_markings(self, model_obj: Model, net: Et.Element):
+        final_marking_defined_in_place_definitions = Marking("-1")
+        token_places = []
+        for place in model_obj.places:
+            if place.final_marking_token_count is not None:
+                token_places.append((place.id, place.final_marking_token_count))
+        if token_places:
+            final_marking_defined_in_place_definitions.token_places = token_places
+            model_obj.final_markings.append(final_marking_defined_in_place_definitions)
+
         final_marking_top = self.get_child_by_tag(net, "finalmarkings")
         if final_marking_top is not None:
             final_markings = self.get_children_by_tag(final_marking_top, "marking")
@@ -300,20 +310,22 @@ class PnmlReader:
                 for index, final_marking in enumerate(final_markings):
                     self.add_final_marking(model_obj, final_marking, index)
             else:
+                if not token_places:
+                    self.final_marking_missing = True
+                    self.warnings.append("No final marking/markings defined!")
+        else:
+            if not token_places:
                 self.final_marking_missing = True
                 self.warnings.append("No final marking/markings defined!")
-        else:
-            self.final_marking_missing = True
-            self.warnings.append("No final marking/markings defined!")
 
-    def configure_arc_references(self, model_obj):
+    def configure_arc_references(self, model_obj: Model):
         for arc in model_obj.arcs:
             source = model_obj.get_place_or_transition_by_id(arc.source)
             target = model_obj.get_place_or_transition_by_id(arc.target)
             source.outputs.append(target)
             target.inputs.append(source)
 
-    def read_pages(self, model_obj, net, pages):
+    def read_pages(self, model_obj: Model, net: Et.Element, pages: [Et.Element]):
         if pages is not None:
             for page in pages:
                 subpages = self.get_children_by_tag(page, "page")
@@ -321,7 +333,7 @@ class PnmlReader:
                     self.read_pages(model_obj, net, subpages)
                 self.read_page(model_obj, page)
 
-    def read_page(self, model_obj, page):
+    def read_page(self, model_obj: Model, page: Et.Element):
         places = self.get_children_by_tag(page, "place")
         if places is not None:
             for place in places:
@@ -335,7 +347,7 @@ class PnmlReader:
             for arc in arcs:
                 self.add_arc(model_obj, arc)
 
-    def add_place(self, model_obj, element):
+    def add_place(self, model_obj: Model, element: Et.Element):
         place = Place(self.get_element_name(element))
         place.id = element.attrib.get("id", None)
         if place.id is None or place.id == "":
@@ -343,6 +355,7 @@ class PnmlReader:
         place.model = Model
         place.tool_specific_info = element.attrib.get("toolspecific", None)
         self.add_graphics(place, element)
+
         initial_marking = self.get_child_by_tag(element, "initialMarking")
         initial_marking_warning = "Invalid initial marking definition for the place with the id" \
                                   " '{place_id}'!".format(place_id=place.id)
@@ -363,9 +376,30 @@ class PnmlReader:
                     self.warnings.append(initial_marking_warning)
             else:
                 self.warnings.append(initial_marking_warning)
+
+        final_marking_warning = "Invalid final marking definition for the place with the id" \
+                                  " '{place_id}'!".format(place_id=place.id)
+        final_marking = self.get_child_by_tag(element, "finalMarking")
+
+        if final_marking is not None:
+            if len(final_marking) > 0:
+                final_marking_text = final_marking[0].text
+                if final_marking_text is not None:
+                    try:
+                        if int(final_marking_text) < 0:
+                            self.warnings.append(final_marking_warning)
+                        else:
+                            place.final_marking_token_count = int(final_marking_text)
+                    except TypeError:
+                        self.warnings.append(final_marking_warning)
+                else:
+                    self.warnings.append(final_marking_warning)
+            else:
+                self.warnings.append(final_marking_warning)
+
         model_obj.places.append(place)
 
-    def add_transition_variables(self, model_obj, transition, element):
+    def add_transition_variables(self, model_obj: Model, transition: Transition, element: Et.Element):
         variables_written = self.get_children_by_tag(element, "writeVariable")
         if not not variables_written:
             for variable in variables_written:
@@ -387,7 +421,7 @@ class PnmlReader:
                                          " not defined! Ignoring this read"
                                          " operation!".format(id=transition.id))
 
-    def add_transition(self, model_obj, element):
+    def add_transition(self, model_obj: Model, element: Et.Element):
         transition = Transition(self.get_element_name(element))
         transition.id = element.attrib.get("id", None)
         invisible = element.attrib.get("invisible", None)
@@ -408,7 +442,7 @@ class PnmlReader:
         self.add_graphics(transition, element)
         model_obj.transitions.append(transition)
 
-    def add_graphics(self, net_object, element):
+    def add_graphics(self, net_object: Union[Place, Transition], element: Et.Element):
         graphics = self.get_child_by_tag(element, "graphics")
         if graphics is not None:
             position = self.get_child_by_tag(graphics, "position")
@@ -423,7 +457,7 @@ class PnmlReader:
             if fill is not None:
                 net_object.fill_color = fill.get("color", None)
 
-    def add_arc(self, model_obj, element):
+    def add_arc(self, model_obj: Model, element: Et.Element):
         name = self.get_element_name(element)
         arc_id = element.get("id", None)
         source = element.get("source", None)
@@ -446,10 +480,9 @@ class PnmlReader:
                 else:
                     arc_type = "undefined"
                 model_obj.arcs.append(
-                    Arc(name, arc_id, source, target, arc_type, tool_specific_info,
-                        model_obj))
+                    Arc(name, arc_id, source, target, arc_type, tool_specific_info))
 
-    def add_final_marking(self, model_obj, element, marking_id):
+    def add_final_marking(self, model_obj: Model, element: Et.Element, marking_id: int):
         valid = True
         marking = Marking(str(marking_id))
         place_markings = self.get_children_by_tag(element, "place")
@@ -474,7 +507,7 @@ class PnmlReader:
             self.warnings.append("Invalid final marking definition found! Ignoring this"
                                  " definition!")
 
-    def add_variable(self, variable, model_obj):
+    def add_variable(self, variable: Et.Element, model_obj: Model):
         var_min_value = variable.get("minValue", None)
         var_max_value = variable.get("maxValue", None)
         var_initial_value = variable.get("value", None)
@@ -504,7 +537,7 @@ class PnmlReader:
                 var_width = 50
         except:
             Global.log_error(__file__, "Failed to read graphical information about a"
-                                                      " variable!", traceback)
+                                       " variable!", traceback)
             var_pos_x = 0.0
             var_pos_y = 0.0
             var_height = 50
@@ -513,7 +546,7 @@ class PnmlReader:
                                             var_width, var_min_value, var_max_value,
                                             var_initial_value))
 
-    def get_element_name(self, element):
+    def get_element_name(self, element: Et.Element) -> str:
         name_element = self.get_child_by_tag(element, "name")
         if name_element is not None:
             return name_element[0].text
@@ -521,19 +554,19 @@ class PnmlReader:
             self.undefined_id_count += 1
             return str(self.undefined_id_count)
 
-    def read_variables(self, model_obj, net):
+    def read_variables(self, model_obj: Model, net: Et.Element):
         variable_parent = self.get_child_by_tag(net, "variables")
         if variable_parent is not None:
             for variable in list(variable_parent):
                 self.add_variable(variable, model_obj)
 
-    def get_child_by_tag(self, parent_element, tag):
+    def get_child_by_tag(self, parent_element: Et.Element, tag: str) -> Union[Et.Element, None]:
         for child in list(parent_element):
             if child.tag == tag:
                 return child
         return None
 
-    def get_children_by_tag(self, parent_element, tag):
+    def get_children_by_tag(self, parent_element: Et.Element, tag: str) -> Union[Et.Element, None]:
         children = []
         for child in list(parent_element):
             if child.tag == tag:

@@ -11,6 +11,7 @@ from src.jilg.Main.XesWriter import XesWriter
 from src.jilg.Model.Model import Model
 from src.jilg.Main.ModelAnalyser import ModelAnalyser
 from src.jilg.Other import Global
+from src.jilg.Simulation.EventLog import EventLog
 from src.jilg.Simulation.Simulation import Simulation, SimStatus
 
 
@@ -40,7 +41,7 @@ class Main:
         self.sim_exit_with_errors = False
         self.errors = ""
 
-    def initialize_model_and_config(self, output_dir=""):
+    def initialize_model_and_config(self, output_dir: str = "") -> (bool, list[str]):
         self.model, warnings = self.reader.read_pnml(self.model_path)
         if self.model is None:
             return False, self.reader.errors
@@ -57,7 +58,7 @@ class Main:
         except:
             Global.log_error(__file__, "ModelAnalyser failed!", traceback)
 
-    def run_simulation(self, write_event_logs, comand_line_mode=False, gui_lock=None):
+    def run_simulation(self, write_event_logs: bool, command_line_mode: bool = False, gui_lock: threading.Lock = None):
         self.sim_exit_with_errors = False
         self.errors = ""
         self.rng = np.random.default_rng(self.config.simulation_config.random_seed)
@@ -75,7 +76,7 @@ class Main:
 
         self.simulation.run()
 
-        if comand_line_mode:
+        if command_line_mode:
             self.run_command_line_mode(write_event_logs)
         else:
             self.thread = threading.Thread(target=self.control_simulation_thread, args=[gui_lock],
@@ -83,7 +84,7 @@ class Main:
             self.sim_stop = False
             self.thread.start()
 
-    def run_command_line_mode(self, write_event_logs):
+    def run_command_line_mode(self, write_event_logs: bool):
         try:
             while True:
                 time.sleep(1)
@@ -133,7 +134,7 @@ class Main:
                 self.write_event_logs(self.simulation.event_logs)
                 print("\nUnfinished event logs written to output directory!")
 
-    def control_simulation_thread(self, gui_lock):
+    def control_simulation_thread(self, gui_lock: threading.Lock):
         try:
             while True:
                 time.sleep(0.1)
@@ -165,7 +166,7 @@ class Main:
             self.event_logs = self.simulation.event_logs
             self.event_logs.append(self.simulation.current_event_log)
 
-    def stop_simulation(self):
+    def stop_simulation(self) -> bool:
         with self.simulation.thread_status_lock:
             self.sim_stop = True
         if self.simulation.event_logs:
@@ -174,7 +175,7 @@ class Main:
         else:
             return False
 
-    def write_event_logs(self, event_logs):
+    def write_event_logs(self, event_logs: [EventLog]):
         self.writer.write_event_logs_to_xes_file(self.config.output_directory_path, event_logs,
                                                  self.config.logs_in_one_file,
                                                  self.config.event_log_name,
