@@ -94,7 +94,7 @@ class Main:
                 print("\nCurrent simulation status:")
                 print("    Nr. of current event logs: {logs}".format(
                     logs=str(sim_status.nr_of_current_logs)))
-                print("    Nr. of current event log traces: {traces}"
+                print("    Nr. of traces of the current event log: {traces}"
                       .format(traces=str(sim_status.nr_of_current_traces)))
                 if self.config.simulation_config.sim_strategy in ["random_exploration", "all"]:
                     print("    Possible traces estimation {traces}"
@@ -103,13 +103,20 @@ class Main:
                     break
 
             self.event_logs = self.simulation.event_logs
-            print("\nSimulation finished!\n\n{logs} event logs with a total number of {traces}"
-                  " traces have been generated! \n\nWriting event logs to:\n {dir}"
-                  .format(dir=self.config.output_directory_path, logs=len(self.event_logs),
+            if len(self.event_logs) > 1:
+                msg = "\nSimulation finished!\n\n{logs} event logs with a total number of {traces}" \
+                      " traces have been generated! \n\nWriting event logs to:\n {dir}"
+            else:
+                msg = "\nSimulation finished!\n\n{logs} event log with a total number of {traces}" \
+                      " traces has been generated! \n\nWriting event logs to:\n {dir}"
+            print(msg.format(dir=self.config.output_directory_path, logs=len(self.event_logs),
                           traces=len(self.event_logs[0].traces) * len(self.event_logs)))
             if write_event_logs:
                 self.write_event_logs(self.simulation.event_logs)
-            print("\nEvent logs written to output directory!")
+            if len(self.event_logs) > 1:
+                print("\nThe event logs have been written to output directory!")
+            else:
+                print("\nThe event log has been written to output directory!")
 
         except KeyboardInterrupt:
             print("\nKeyboard Interrupt! Aborting simulation! Please wait!")

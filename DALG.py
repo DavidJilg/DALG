@@ -57,7 +57,7 @@ if __name__ == "__main__":
                             main.config.configure_variables_and_transitions(main.model)
                             print("Running the simulation!")
                             main.run_simulation(write_event_logs=True,
-                                                comand_line_mode=True,
+                                                command_line_mode=True,
                                                 gui_lock=threading.Lock())
                     else:
                         print("The model could not be loaded due to the following errors: ")
