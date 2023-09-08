@@ -51,8 +51,8 @@ class TestPnmlReader(TestCase):
     model1_arc_n8_type = "normal"
 
     model1_initial_marking = [('n1', 1), ('n2', 0), ('n3', 0), ('n4', 0)]
-    model1_final_marking1 = [('n1', 0), ('n2', 0), ('n3', 0), ('n4', 1)]
-    model1_final_marking2 = [('n1', 0), ('n2', 0), ('n3', 1), ('n4', 0)]
+    model1_final_marking1 = [('n3', 1), ('n4', 1)]
+    model1_final_marking2 = [('n1', 0), ('n2', 0), ('n3', 0), ('n4', 1)]
 
     model1_variable1_type = VariableTypes.STRING
     model1_variable1_value = ""

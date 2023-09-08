@@ -2607,62 +2607,72 @@ class MainGui:
         return days, QTime(hours, minutes, seconds)
 
     def safe_config(self, file_path=None, only_safe=False):
-        if self.status == Status.MODEL_LOADED:
-            self.update_config_from_gui()
-            self.main.config.model_file_path = self.main.model_path
-        if file_path is None:
-            file_path = QFileDialog.getSaveFileName(self.window, 'Safe configuration', os.getcwd(),
-                                                    "JSON File (*.json)")[0]
-        if file_path:
-            if only_safe:
-                try:
-                    self.main.config.write_config_file(file_path)
-                except:
-                    Global.log_error(__file__,
-                                                    f"Saving the configuration file failed!", traceback)
-                    self.display_error_msg(str(traceback.format_exc()),
-                                           "An Error occurred while saving the configuration!")
-            else:
-                if self.status == Status.MODEL_LOADED or self.status == Status.SIM_RUNNING:
-                    warnings = []
-                    for var_input in self.variable_inputs:
-                        warnings += self.check_values_config(var_input,
-                                                             var_input.variable.original_name,
-                                                             True)
-                        warnings += self.check_dependencies_config(var_input,
-                                                                   var_input.variable.original_name,
-                                                                   True)
-                        if var_input.variable.type in [VariableTypes.DATE, VariableTypes.INT
-                            , VariableTypes.LONG, VariableTypes.DOUBLE]:
-                            warnings += self.check_intervals_config(var_input,
-                                                                    var_input.variable.original_name,
-                                                                    True)
-                    if warnings:
-                        text = ""
-                        for warning in warnings:
-                            text += warning + "\n"
-                        if text is None:
-                            text = "An Error occurred!"
-                        msg = QMessageBox()
-                        msg.setIcon(QMessageBox.Critical)
-                        msg.setText("Saving the configuration failed with the following errors:\n")
-                        msg.setWindowTitle("Error!")
-                        msg.setInformativeText(text)
-                        msg.setButtonText(1, "Ok")
-                        msg.exec()
-                    else:
-                        self.update_config_from_gui()
-                        self.main.config.write_config_file(file_path)
-                else:
+        config_check_result = self.check_configuration()
+        if not config_check_result[0]:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Saving the configuration failed with the following errors:\n")
+            msg.setWindowTitle("Error!")
+            msg.setInformativeText("\n".join(config_check_result[1]))
+            msg.setButtonText(1, "Ok")
+            msg.exec()
+        else:
+            if self.status == Status.MODEL_LOADED:
+                self.update_config_from_gui()
+                self.main.config.model_file_path = self.main.model_path
+            if file_path is None:
+                file_path = QFileDialog.getSaveFileName(self.window, 'Safe configuration', os.getcwd(),
+                                                        "JSON File (*.json)")[0]
+            if file_path:
+                if only_safe:
                     try:
-                        self.main.config = Configuration(None)
-                        self.update_config_from_gui()
                         self.main.config.write_config_file(file_path)
                     except:
                         Global.log_error(__file__,
                                                         f"Saving the configuration file failed!", traceback)
                         self.display_error_msg(str(traceback.format_exc()),
                                                "An Error occurred while saving the configuration!")
+                else:
+                    if self.status == Status.MODEL_LOADED or self.status == Status.SIM_RUNNING:
+                        warnings = []
+                        for var_input in self.variable_inputs:
+                            warnings += self.check_values_config(var_input,
+                                                                 var_input.variable.original_name,
+                                                                 True)
+                            warnings += self.check_dependencies_config(var_input,
+                                                                       var_input.variable.original_name,
+                                                                       True)
+                            if var_input.variable.type in [VariableTypes.DATE, VariableTypes.INT
+                                , VariableTypes.LONG, VariableTypes.DOUBLE]:
+                                warnings += self.check_intervals_config(var_input,
+                                                                        var_input.variable.original_name,
+                                                                        True)
+                        if warnings:
+                            text = ""
+                            for warning in warnings:
+                                text += warning + "\n"
+                            if text is None:
+                                text = "An Error occurred!"
+                            msg = QMessageBox()
+                            msg.setIcon(QMessageBox.Critical)
+                            msg.setText("Saving the configuration failed with the following errors:\n")
+                            msg.setWindowTitle("Error!")
+                            msg.setInformativeText(text)
+                            msg.setButtonText(1, "Ok")
+                            msg.exec()
+                        else:
+                            self.update_config_from_gui()
+                            self.main.config.write_config_file(file_path)
+                    else:
+                        try:
+                            self.main.config = Configuration(None)
+                            self.update_config_from_gui()
+                            self.main.config.write_config_file(file_path)
+                        except:
+                            Global.log_error(__file__,
+                                                            f"Saving the configuration file failed!", traceback)
+                            self.display_error_msg(str(traceback.format_exc()),
+                                                   "An Error occurred while saving the configuration!")
 
     def change_variance_input(self):
         if self.window.ui.variance_input.isChecked():
