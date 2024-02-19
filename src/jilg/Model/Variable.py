@@ -48,7 +48,7 @@ class Variable:
         elif self.type == VariableTypes.STRING:
             return f'"{self.get_correct_next_value(transition.id)}"'
         elif self.type == VariableTypes.DATE:
-            return QDateTime.fromSecsSinceEpoch(self.get_correct_next_value(transition.id)) \
+            return QDateTime.fromSecsSinceEpoch(int(self.get_correct_next_value(transition.id))) \
                 .toString(format="yyyy-MM-ddThh:mm:ss")
         elif self.type == VariableTypes.BOOL:
             if self.get_correct_next_value(transition.id):

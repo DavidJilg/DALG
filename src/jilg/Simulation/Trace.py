@@ -21,7 +21,7 @@ class Trace:
         for variable in model.variables:
             if variable.has_current_value and variable.semantic_information.trace_variable:
                 if variable.type == VariableTypes.DATE:
-                    date = (QDateTime.fromSecsSinceEpoch(variable.value).toPython()).isoformat()
+                    date = (QDateTime.fromSecsSinceEpoch(int(variable.value)).toPython()).isoformat()
                     self.variables.append((variable.original_name, date,
                                            self.get_xml_variable_type_string(variable.type)))
                 else:

@@ -113,7 +113,7 @@ class SemanticInformation:
         var_type = model.get_variable_by_name(self.variable_name).type
         for interval in self.intervals:
             if var_type == VariableTypes.DATE:
-                date = QDateTime.fromSecsSinceEpoch(interval[1]).toString("yyyy-MM-ddThh:mm:ss")
+                date = QDateTime.fromSecsSinceEpoch(int(interval[1])).toString("yyyy-MM-ddThh:mm:ss")
                 string += '("{operator}"; "{boundry}"),'.format(operator=interval[0],
                                                                 boundry=date)
             else:
@@ -136,7 +136,7 @@ class SemanticInformation:
                     else:
                         value = self.get_self_reference_value(dependency[1][1])
                 else:
-                    value = QDateTime.fromSecsSinceEpoch(dependency[1][1]) \
+                    value = QDateTime.fromSecsSinceEpoch(int(dependency[1][1])) \
                         .toString("yyyy-MM-ddThh:mm:ss")
             else:
                 value = str(dependency[1][1])
@@ -176,8 +176,7 @@ class SemanticInformation:
         string = ""
         if model.get_variable_by_name(self.variable_name).type == VariableTypes.DATE:
             for value in self.values[0]:
-                string += '"' + str(QDateTime.fromSecsSinceEpoch(value).toPython()).replace(" ",
-                                                                                            "T") + ', '
+                string += '"' + str(QDateTime.fromSecsSinceEpoch(int(value)).toPython()).replace(" ","T") + '"' + ', '
             values_part = string[:-2]
         else:
             for value in self.values[0]:

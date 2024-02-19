@@ -2559,16 +2559,16 @@ class MainGui:
             var_input.self_deviation_input2.setTime(time)
 
             var_input.inverse_intervals_input.setChecked(var_config.include_inverse_intervals)
-            var_input.initial_input.setDateTime(QDateTime.fromSecsSinceEpoch(
-                var_config.initial_value))
+            var_input.initial_input.setDateTime(QDateTime.fromSecsSinceEpoch(int(
+                var_config.initial_value)))
             var_input.min_input.setDateTime(QDateTime.fromString(
                 "2000-01-01T00:00:00", "yyyy-MM-ddThh:mm:ss"))
             var_input.max_input.setDateTime(QDateTime.fromString(
                 "2000-01-01T00:00:00", "yyyy-MM-ddThh:mm:ss"))
             if var_config.has_min:
-                var_input.min_input.setDateTime(QDateTime.fromSecsSinceEpoch(var_config.min))
+                var_input.min_input.setDateTime(QDateTime.fromSecsSinceEpoch(int(var_config.min)))
             if var_config.has_max:
-                var_input.max_input.setDateTime(QDateTime.fromSecsSinceEpoch(var_config.max))
+                var_input.max_input.setDateTime(QDateTime.fromSecsSinceEpoch(int(var_config.max)))
             var_input.info_used_input.setCurrentIndex(var_config.used_information)
             var_input.intervals_input.setPlainText(var_config.get_intervals_string(self.main.model))
 
