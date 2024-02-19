@@ -11,4 +11,4 @@ The documentation for DALG can be found in the src/documentation folder.
 To install DALG use either the Ubuntu or the Windows installer provided in the release section of this repository. Alternatively, you can download the sourcecode and run the DALG.py script in a Python enviroment that has all necessary libraries installed.
 
 # Third Party Attributions
-DALG relies on third party libraries of which some are not available under the GNU GLP v3. All licenses of these libraries can be found in the src/documentation/attributions folder. The licenses are split into two groups. The first group consist of third party libraries needed by the Qt6.6 framework used for the GUI of DALG. The second group consist of other third party libaries such as NumPy.
+DALG relies on third party libraries of which some are not available under the GNU GLP v3. All licenses of these libraries can be found in the src/documentation/attributions folder. The licenses are split into two groups. The first group consist of third party libraries needed by the Qt6.6 framework used for the GUI of DALG. The second group consist of other third party libraries such as NumPy.
